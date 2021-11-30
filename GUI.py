@@ -61,16 +61,12 @@ class Application(tk.Frame):
             #print(self.board)
         
 
-    def createWidgets(self):
-
-        #pixelVirtual = tk.PhotoImage(file = "./sprites/Chess_bdt60.png")          
+    def createWidgets(self):   
 
         for rank in range(0, 8):
             for phile in range(0, 8):
 
                 piece = self.board[rank*8+phile]
-
-                #text = piece.name if piece != "none" else ""
 
                 photo = tk.PhotoImage(file = "./sprites/" + piece.color + piece.name + ".png") if piece != "none" else tk.PhotoImage(width=1, height=1)
 
@@ -81,4 +77,4 @@ class Application(tk.Frame):
 
 app = Application()                       
 app.master.title('Sample application')    
-app.mainloop() 
+app.mainloop()

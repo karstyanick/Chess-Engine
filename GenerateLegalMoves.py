@@ -5,6 +5,7 @@ queenmoves = [-8,8,-1,1,-9,-7,9,7]
 whitepawnmoves = [-7,-8,-9]
 blackpawnmoves = [7,8,9]
 knightmoves = [-6,-10,-15,-17,6,10,15,17]
+kingmoves = [-8,8,-1,1,7,-7,9,-9]
 
 def SquaresToEdge(index):
     NumOfSquaresToEdge = []
@@ -19,11 +20,11 @@ def SquaresToEdge(index):
     down_left = int(min(down, left))
 
     NumOfSquaresToEdge.extend([up, down, left, right, up_right, up_left, down_right, down_left])
-    print(NumOfSquaresToEdge)
     return NumOfSquaresToEdge
 
 def collision(Board, Piece, index, offset):
     collisionlist = [False, False]
+
     if index+offset < 64 and index+offset > 0 and Board[index+offset] != "none":
         if Piece.color != Board[index+offset].color:
             collisionlist[1] = True
@@ -37,6 +38,7 @@ def collision(Board, Piece, index, offset):
 def GenerateLegalMoves(PieceIndex, Board):
     legalmoves = []
     Piece = Board[PieceIndex]
+    kingmove = False
 
     if Piece.name == "Rook":
         moveset = rookmoves
@@ -50,11 +52,13 @@ def GenerateLegalMoves(PieceIndex, Board):
         moveset = whitepawnmoves
     elif Piece.name == "Knight":
         moveset = knightmoves
+    elif Piece.name == "King":
+        moveset = kingmoves
 
     
-    print(moveset)
 
     for offset in moveset:
+
         index = PieceIndex
         NumOfSquresToEdgeList =  SquaresToEdge(index)
 
@@ -72,6 +76,17 @@ def GenerateLegalMoves(PieceIndex, Board):
 
                         legalmoves.append(index + offset)
                         index += offset
+
+                elif moveset == kingmoves:
+
+                    for i in range (0, min(NumOfSquresToEdge, 1)):
+                        if collision(Board, Piece, index, offset)[0] or collision(Board, Piece, index, offset)[1]:
+                            if collision(Board, Piece, index, offset)[0]:
+                                continue
+                            else:
+                                legalmoves.append(index + offset)
+                                continue
+                        legalmoves.append(index+offset)
                 else:
                     for i in range (0,NumOfSquresToEdge):
                         if collision(Board, Piece, index, offset)[0] or collision(Board, Piece, index, offset)[1]:
@@ -86,17 +101,30 @@ def GenerateLegalMoves(PieceIndex, Board):
                 
             elif offset == -1:
                 NumOfSquresToEdge = NumOfSquresToEdgeList[2]
-                
-                for i in range (0,NumOfSquresToEdge):
-                    if collision(Board, Piece, index, offset)[0] or collision(Board, Piece, index, offset)[1]:
+                if moveset == kingmoves:
+                    x = 1
+                    if Piece.firstmove and Board[63].firstmove:
+                        x = 2
+                    for i in range (0, min(NumOfSquresToEdge, x)):
+                        if collision(Board, Piece, index, offset)[0] or collision(Board, Piece, index, offset)[1]:
                             if collision(Board, Piece, index, offset)[0]:
-                                break
+                                continue
                             else:
                                 legalmoves.append(index + offset)
-                                index += offset
-                                break
-                    legalmoves.append(index + offset)
-                    index += offset
+                                continue
+                        legalmoves.append(index+offset)
+                        index += offset
+                else:
+                    for i in range (0,NumOfSquresToEdge):
+                        if collision(Board, Piece, index, offset)[0] or collision(Board, Piece, index, offset)[1]:
+                                if collision(Board, Piece, index, offset)[0]:
+                                    break
+                                else:
+                                    legalmoves.append(index + offset)
+                                    index += offset
+                                    break
+                        legalmoves.append(index + offset)
+                        index += offset
 
             elif offset == -7:
                 NumOfSquresToEdge = NumOfSquresToEdgeList[4]
@@ -114,6 +142,16 @@ def GenerateLegalMoves(PieceIndex, Board):
                             index += offset
                     else:
                         continue
+                elif moveset == kingmoves:
+
+                    for i in range (0, min(NumOfSquresToEdge, 1)):
+                        if collision(Board, Piece, index, offset)[0] or collision(Board, Piece, index, offset)[1]:
+                            if collision(Board, Piece, index, offset)[0]:
+                                continue
+                            else:
+                                legalmoves.append(index + offset)
+                                continue
+                        legalmoves.append(index+offset)
                 else:
                     for i in range (0,NumOfSquresToEdge):
                         if collision(Board, Piece, index, offset)[0] or collision(Board, Piece, index, offset)[1]:
@@ -142,6 +180,17 @@ def GenerateLegalMoves(PieceIndex, Board):
                             index += offset
                     else:
                         continue
+
+                elif moveset == kingmoves:
+ 
+                    for i in range (0, min(NumOfSquresToEdge, 1)):
+                        if collision(Board, Piece, index, offset)[0] or collision(Board, Piece, index, offset)[1]:
+                            if collision(Board, Piece, index, offset)[0]:
+                                continue
+                            else:
+                                legalmoves.append(index + offset)
+                                continue
+                        legalmoves.append(index+offset)
                 else:
                     for i in range (0,NumOfSquresToEdge):
                         if collision(Board, Piece, index, offset)[0] or collision(Board, Piece, index, offset)[1]:
@@ -221,6 +270,17 @@ def GenerateLegalMoves(PieceIndex, Board):
 
                         legalmoves.append(index + offset)
                         index += offset
+
+                elif moveset == kingmoves:
+
+                    for i in range (0, min(NumOfSquresToEdge, 1)):
+                        if collision(Board, Piece, index, offset)[0] or collision(Board, Piece, index, offset)[1]:
+                            if collision(Board, Piece, index, offset)[0]:
+                                continue
+                            else:
+                                legalmoves.append(index + offset)
+                                continue
+                        legalmoves.append(index+offset)
                 else:
                     for i in range (0,NumOfSquresToEdge):
                         if collision(Board, Piece, index, offset)[0] or collision(Board, Piece, index, offset)[1]:
@@ -233,18 +293,36 @@ def GenerateLegalMoves(PieceIndex, Board):
                         legalmoves.append(index + offset)
                         index += offset
             elif offset == 1:
-                NumOfSquresToEdge = NumOfSquresToEdgeList[3]
 
-                for i in range (0,NumOfSquresToEdge):
-                    if collision(Board, Piece, index, offset)[0] or collision(Board, Piece, index, offset)[1]:
+                NumOfSquresToEdge = NumOfSquresToEdgeList[3]
+                
+                if moveset == kingmoves:
+                    x = 1
+                    if Piece.firstmove and Board[63].firstmove:
+                        x = 2
+                        Piece.firstmove = False
+                        Board[63].firstmove = False
+                    for i in range (0, min(NumOfSquresToEdge, x)):
+                        if collision(Board, Piece, index, offset)[0] or collision(Board, Piece, index, offset)[1]:
                             if collision(Board, Piece, index, offset)[0]:
-                                break
+                                continue
                             else:
                                 legalmoves.append(index + offset)
-                                index += offset
-                                break
-                    legalmoves.append(index + offset)
-                    index += offset
+                                continue
+                        legalmoves.append(index+offset)
+                        index+=offset
+                else:
+                    for i in range (0,NumOfSquresToEdge):
+                        if collision(Board, Piece, index, offset)[0] or collision(Board, Piece, index, offset)[1]:
+                                if collision(Board, Piece, index, offset)[0]:
+                                    break
+                                else:
+                                    legalmoves.append(index + offset)
+                                    index += offset
+                                    break
+                        legalmoves.append(index + offset)
+                        index += offset
+
             elif offset == 7:
                 NumOfSquresToEdge = NumOfSquresToEdgeList[7]
 
@@ -262,6 +340,16 @@ def GenerateLegalMoves(PieceIndex, Board):
                             index += offset
                     else:
                         continue
+                elif moveset == kingmoves:
+
+                    for i in range (0, min(NumOfSquresToEdge, 1)):
+                        if collision(Board, Piece, index, offset)[0] or collision(Board, Piece, index, offset)[1]:
+                            if collision(Board, Piece, index, offset)[0]:
+                                continue
+                            else:
+                                legalmoves.append(index + offset)
+                                continue
+                        legalmoves.append(index+offset)
                 else:
                     for i in range (0,NumOfSquresToEdge):
                         if collision(Board, Piece, index, offset)[0] or collision(Board, Piece, index, offset)[1]:
@@ -290,6 +378,16 @@ def GenerateLegalMoves(PieceIndex, Board):
                             index += offset
                     else:
                         continue
+                elif moveset == kingmoves:
+
+                    for i in range (0, min(NumOfSquresToEdge, 1)):
+                        if collision(Board, Piece, index, offset)[0] or collision(Board, Piece, index, offset)[1]:
+                            if collision(Board, Piece, index, offset)[0]:
+                                continue
+                            else:
+                                legalmoves.append(index + offset)
+                                continue
+                        legalmoves.append(index+offset)
                 else:
                     for i in range (0,NumOfSquresToEdge):
                         if collision(Board, Piece, index, offset)[0] or collision(Board, Piece, index, offset)[1]:
