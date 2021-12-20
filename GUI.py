@@ -17,6 +17,7 @@ class Application(tk.Frame):
     button_identities = []
 
     pickedpiece = "none"
+    pickedindex = 0
 
     def __init__(self, master=None):
 
@@ -37,6 +38,7 @@ class Application(tk.Frame):
 
         if self.pickedpiece == "none":
             self.pickedpiece = self.board[index-1]
+            self.pickedindex = index-1
             self.legalmoves = GenerateLegalMoves(index-1, self.board)
             for square in self.legalmoves:
                 self.button_identities[square].configure(background = "red")
@@ -52,13 +54,22 @@ class Application(tk.Frame):
             for square in self.legalmoves:
                 self.button_identities[square].configure(background = "#f0f0f0")
             
-            photo = tk.PhotoImage(file= "./sprites/" + self.pickedpiece.color + self.pickedpiece.name + ".png")
-            bname.configure(image = photo)
-            bname.image = photo
-            self.board[index-1] = self.pickedpiece
+            if index-1 in self.legalmoves:      
+                photo = tk.PhotoImage(file= "./sprites/" + self.pickedpiece.color + self.pickedpiece.name + ".png")
+                bname.configure(image = photo)
+                bname.image = photo
+                self.board[index-1] = self.pickedpiece
 
-            self.pickedpiece = "none"
-            #print(self.board)
+                self.pickedpiece = "none"
+                #print(self.board)
+            else:
+                bname = (self.button_identities[self.pickedindex])
+                self.board[self.pickedindex] = self.pickedpiece
+                photo = tk.PhotoImage(file= "./sprites/" + self.pickedpiece.color + self.pickedpiece.name + ".png")
+                bname.configure(image = photo)
+                bname.image = photo
+
+                self.pickedpiece = "none"
         
 
     def createWidgets(self):   
