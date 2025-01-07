@@ -13,6 +13,7 @@ class Application(tk.Frame):
     board = boardinit.board
     legalmoves = []
 
+    nextTurn = "White"
 
     button_identities = []
 
@@ -36,8 +37,17 @@ class Application(tk.Frame):
         else:
             index = 1
 
+        if self.board[index-1] != "none" and self.board[index-1].color != self.nextTurn:
+            print("Not your turn")
+            return
+
         if self.pickedpiece == "none":
             self.pickedpiece = self.board[index-1]
+
+            if self.board[index-1] == "none":
+                print("No piece in that square")
+                return
+
             self.pickedindex = index-1
             self.legalmoves = GenerateLegalMoves(index-1, self.board)
             for square in self.legalmoves:
@@ -49,6 +59,7 @@ class Application(tk.Frame):
 
             bname.configure(image = photo)
             bname.image = photo
+
             #print(self.board)
         else:
             for square in self.legalmoves:
@@ -59,9 +70,6 @@ class Application(tk.Frame):
                 bname.configure(image = photo)
                 bname.image = photo
                 self.board[index-1] = self.pickedpiece
-
-                self.pickedpiece = "none"
-                #print(self.board)
             else:
                 bname = (self.button_identities[self.pickedindex])
                 self.board[self.pickedindex] = self.pickedpiece
@@ -69,7 +77,8 @@ class Application(tk.Frame):
                 bname.configure(image = photo)
                 bname.image = photo
 
-                self.pickedpiece = "none"
+            self.pickedpiece = "none"
+            self.nextTurn = "Black" if self.nextTurn == "White" else "White"
         
 
     def createWidgets(self):   
