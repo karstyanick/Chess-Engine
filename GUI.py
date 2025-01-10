@@ -20,10 +20,13 @@ class Application(tk.Frame):
     pickedpiece = "none"
     pickedindex = 0
 
+    original_button_color = ""
+    original_button_backgroundcolor = ""
+
     def __init__(self, master=None):
 
         tk.Frame.__init__(self, master) 
-        self.grid(column=0, row=0)                       
+        self.grid(column=0, row=0)
         self.createWidgets()
 
     def recordpress(self, position):
@@ -37,11 +40,11 @@ class Application(tk.Frame):
         else:
             index = 1
 
-        if self.board[index-1] != "none" and self.board[index-1].color != self.nextTurn:
-            print("Not your turn")
-            return
-
         if self.pickedpiece == "none":
+            if self.board[index-1] != "none" and self.board[index-1].color != self.nextTurn:
+                print("Not your turn")
+                return
+                
             self.pickedpiece = self.board[index-1]
 
             if self.board[index-1] == "none":
@@ -51,7 +54,7 @@ class Application(tk.Frame):
             self.pickedindex = index-1
             self.legalmoves = GenerateLegalMoves(index-1, self.board)
             for square in self.legalmoves:
-                self.button_identities[square].configure(background = "red")
+                self.button_identities[square].configure(background = "red", activebackground = "pink")
 
             self.board[index-1] = "none"
 
@@ -63,9 +66,25 @@ class Application(tk.Frame):
             #print(self.board)
         else:
             for square in self.legalmoves:
-                self.button_identities[square].configure(background = "#f0f0f0")
+                self.button_identities[square].configure(background = self.original_button_color, activebackground = self.original_button_backgroundcolor)
             
-            if index-1 in self.legalmoves:      
+            if index-1 in self.legalmoves:
+
+                if self.pickedpiece.name == "King" and abs(self.pickedindex - (index-1)) == 2:
+                    rooks = [piece for piece in self.board if piece != "none" and piece.name == "Rook" and piece.color == self.pickedpiece.color and piece.firstmove]
+                    self.board[index-2] = rooks[1]
+                    self.board[rooks[1].position] = "none"
+                    rookPosition = rooks[1].position
+                    emtpyField = (self.button_identities[rookPosition])
+                    emtpyFieldPhoto = tk.PhotoImage(width=1, height=1)
+                    emtpyField.configure(image = emtpyFieldPhoto)
+                    emtpyField.image = emtpyFieldPhoto
+                    movedRookField = (self.button_identities[index-2])
+                    movedRookFieldPhoto = tk.PhotoImage(file= "./sprites/" + rooks[1].color + rooks[1].name + ".png")
+                    movedRookField.configure(image = movedRookFieldPhoto)
+                    movedRookField.image = movedRookFieldPhoto
+
+
                 photo = tk.PhotoImage(file= "./sprites/" + self.pickedpiece.color + self.pickedpiece.name + ".png")
                 bname.configure(image = photo)
                 bname.image = photo
@@ -76,6 +95,7 @@ class Application(tk.Frame):
                 photo = tk.PhotoImage(file= "./sprites/" + self.pickedpiece.color + self.pickedpiece.name + ".png")
                 bname.configure(image = photo)
                 bname.image = photo
+
 
             self.pickedpiece = "none"
             self.nextTurn = "Black" if self.nextTurn == "White" else "White"
@@ -91,6 +111,8 @@ class Application(tk.Frame):
                 photo = tk.PhotoImage(file = "./sprites/" + piece.color + piece.name + ".png") if piece != "none" else tk.PhotoImage(width=1, height=1)
 
                 x = tk.Button(self, image=photo, height=100, width=100, command = partial(self.recordpress, (rank*8+phile)))
+                self.original_button_color = x.cget("background")
+                self.original_button_backgroundcolor = x.cget("activebackground")
                 x.grid(column=phile, row=rank)
                 x.image = photo
                 self.button_identities.append(x)
