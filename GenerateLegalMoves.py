@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, Tuple
 from Board import Board
 from Piece import Piece
 
@@ -43,7 +43,7 @@ def singleSquareMovesToEdge(index: int) -> List[int]:
 def collision(Board: List[Union[Piece, str]], Piece: Piece, index: int, offset: int) -> List[bool]:
     collisionlist: List[bool] = [False, False]
 
-    if 0 < index + offset < 64 and Board[index + offset] != "none":
+    if 0 <= index + offset < 64 and Board[index + offset] != "none":
         if Piece.color != Board[index + offset].color:
             collisionlist[1] = True
         else:
@@ -108,13 +108,16 @@ def generateLegalQueenMoves(piece: Piece, board: List[Union[Piece, str]], pieceI
 
     return legalMoves
 
-def generateLegalBlackPawnMoves(piece: Piece, board: List[Union[Piece, str]], pieceIndex: int, moveset: List[int]) -> List[int]:
+def generateLegalBlackPawnMoves(piece: Piece, board: List[Union[Piece, str]], pieceIndex: int, moveset: List[int], previousMovesList: List[Tuple[Piece, int, int]]) -> List[int]:
     legalMoves: List[int] = []
 
     for offset in moveset:
         numberOfSquaresToEdge = getNumSquaresToEdgeBasedOnOffset(pieceIndex, offset)
 
         if offset in [7, 9]:
+            if len(previousMovesList) > 0 and previousMovesList[-1][0].name == "Pawn" and (previousMovesList[-1][2]-previousMovesList[-1][1])/8 == 2 and previousMovesList[-1][2]+8 == pieceIndex + offset:
+                legalMoves.append(pieceIndex + offset)
+
             if pieceIndex + offset < 64 and board[pieceIndex + offset] == "none":
                 continue
             else:
@@ -124,13 +127,16 @@ def generateLegalBlackPawnMoves(piece: Piece, board: List[Union[Piece, str]], pi
 
     return legalMoves
 
-def generateLegalWhitePawnMoves(piece: Piece, board: List[Union[Piece, str]], pieceIndex: int, moveset: List[int]) -> List[int]:
+def generateLegalWhitePawnMoves(piece: Piece, board: List[Union[Piece, str]], pieceIndex: int, moveset: List[int], previousMovesList: List[Tuple[Piece, int, int]]) -> List[int]:
     legalMoves: List[int] = []
 
     for offset in moveset:
         numberOfSquaresToEdge = getNumSquaresToEdgeBasedOnOffset(pieceIndex, offset)
 
         if offset in [-7, -9]:
+            if len(previousMovesList) > 0 and previousMovesList[-1][0].name == "Pawn" and (previousMovesList[-1][2]-previousMovesList[-1][1])/8 == 2 and previousMovesList[-1][2]-8 == pieceIndex + offset:
+                legalMoves.append(pieceIndex + offset)
+
             if pieceIndex + offset > 0 and board[pieceIndex + offset] == "none":
                 continue
             else:
@@ -146,13 +152,12 @@ def generateLegalKingMoves(piece: Piece, board: List[Union[Piece, str]], pieceIn
 
     for offset in moveset:
         numberOfSquaresToEdge = getNumSquaresToEdgeBasedOnOffset(pieceIndex, offset)
-        if offset in [-1, 1]:
-            if len(eligableRooks) > 0 and piece.firstmove:
+        if offset == -1 and next((rook for rook in eligableRooks if piece.position > rook.position), None) and piece.firstmove:
                 legalMoves += getDefaultMovesForOffset(board, piece, pieceIndex, offset, min(numberOfSquaresToEdge, 2))
-            else:
-                legalMoves += getDefaultMovesForOffset(board, piece, pieceIndex, offset, min(numberOfSquaresToEdge, 1))
-
-        legalMoves += getDefaultMovesForOffset(board, piece, pieceIndex, offset, min(numberOfSquaresToEdge, 1))
+        elif offset == 1 and next((rook for rook in eligableRooks if piece.position < rook.position), None) and piece.firstmove:
+                legalMoves += getDefaultMovesForOffset(board, piece, pieceIndex, offset, min(numberOfSquaresToEdge, 2))
+        else:
+            legalMoves += getDefaultMovesForOffset(board, piece, pieceIndex, offset, min(numberOfSquaresToEdge, 1))
 
     return legalMoves
 
@@ -165,7 +170,7 @@ def generateLegalKnightMoves(piece: Piece, board: List[Union[Piece, str]], piece
 
     return legalMoves
 
-def GenerateLegalMoves(pieceIndex: int, board: List[Union[Piece, str]]) -> List[int]:
+def GenerateLegalMoves(pieceIndex: int, board: List[Union[Piece, str]], previousMovesList: List[Tuple[Piece, int, int]]) -> List[int]:
     legalmoves: List[int] = []
     piece = board[pieceIndex]
 
@@ -176,15 +181,14 @@ def GenerateLegalMoves(pieceIndex: int, board: List[Union[Piece, str]]) -> List[
     elif piece.name == "Queen":
         legalmoves += generateLegalQueenMoves(piece, board, pieceIndex, queenmoves)
     elif piece.name == "Pawn" and piece.color == "Black":
-        legalmoves += generateLegalBlackPawnMoves(piece, board, pieceIndex, blackpawnmoves)
+        legalmoves += generateLegalBlackPawnMoves(piece, board, pieceIndex, blackpawnmoves, previousMovesList)
     elif piece.name == "Pawn" and piece.color == "White":
-        legalmoves += generateLegalWhitePawnMoves(piece, board, pieceIndex, whitepawnmoves)
+        legalmoves += generateLegalWhitePawnMoves(piece, board, pieceIndex, whitepawnmoves, previousMovesList)
     elif piece.name == "Knight":
         legalmoves += generateLegalKnightMoves(piece, board, pieceIndex, knightmoves)
     elif piece.name == "King":
         legalmoves += generateLegalKingMoves(piece, board, pieceIndex, kingmoves)
 
-    piece.firstmove = False
     print(legalmoves)
     print("---------------------------------------------------")
 
