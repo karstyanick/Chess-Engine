@@ -1,6 +1,8 @@
 from typing import List, Union, Tuple
-from Board import Board
 from Piece import Piece
+from makeMove import makeMove
+import copy
+
 
 # Movesets as lists of integers
 rookmoves: List[int] = [-8, 8, -1, 1]
@@ -170,7 +172,7 @@ def generateLegalKnightMoves(piece: Piece, board: List[Union[Piece, str]], piece
 
     return legalMoves
 
-def GenerateLegalMoves(pieceIndex: int, board: List[Union[Piece, str]], previousMovesList: List[Tuple[Piece, int, int]]) -> List[int]:
+def GenerateLegalMovesPreCheck(pieceIndex: int, board: List[Union[Piece, str]], previousMovesList: List[Tuple[Piece, int, int]]) -> List[int]:
     legalmoves: List[int] = []
     piece = board[pieceIndex]
 
@@ -188,8 +190,35 @@ def GenerateLegalMoves(pieceIndex: int, board: List[Union[Piece, str]], previous
         legalmoves += generateLegalKnightMoves(piece, board, pieceIndex, knightmoves)
     elif piece.name == "King":
         legalmoves += generateLegalKingMoves(piece, board, pieceIndex, kingmoves)
+    
+    return legalmoves
 
-    print(legalmoves)
-    print("---------------------------------------------------")
+def GenerateLegalMoves(pieceIndex: int, board: List[Union[Piece, str]], previousMovesList: List[Tuple[Piece, int, int]]) -> List[int]:
+    legalmoves = GenerateLegalMovesPreCheck(pieceIndex, board, previousMovesList)
+    piece = board[pieceIndex]
+
+    for move in legalmoves[:]:
+        boardCopy = copy.deepcopy(board)
+        movesListCopy = copy.deepcopy(previousMovesList)
+        pieceCopy = boardCopy[pieceIndex]
+        makeMove(boardCopy, pieceCopy, legalmoves, move, movesListCopy, False)
+        if next((boardPiece for boardPiece in boardCopy if boardPiece != "none" and boardPiece.name == "King" and boardPiece.color == piece.color and boardPiece.inCheck), None):
+            legalmoves.remove(move)
+        
+    if (piece.name == "King" and piece.position + 2 in legalmoves and piece.position + 1 not in legalmoves):
+        legalmoves.remove(piece.position + 2)
+
+    if (piece.name == "King" and piece.position - 2 in legalmoves and piece.position - 1 not in legalmoves):
+        legalmoves.remove(piece.position - 2)
 
     return legalmoves
+
+def setCheckMate(board: List[Union[Piece, str]], color: str):
+    for piece in board:
+        if piece != "none" and piece.color == color:
+            legalmoves = GenerateLegalMoves(piece.position, board, [])
+            if len(legalmoves) > 0:
+                return
+
+    king = next((boardPiece for boardPiece in board if boardPiece != "none" and boardPiece.name == "King" and boardPiece.color == color), None)
+    king.inCheckMate = True

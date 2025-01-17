@@ -4,9 +4,12 @@ from functools import partial
 
 from Board import Board
 from FENinterpreter import feninterpreter
-from GenerateLegalMoves import GenerateLegalMoves
+from GenerateLegalMoves import GenerateLegalMoves, setCheckMate
 from Piece import Piece
 import re
+
+from makeMove import makeMove
+import time
 
 
 class Application(tk.Frame):
@@ -40,70 +43,53 @@ class Application(tk.Frame):
 
         if self.pickedpiece == "none":
             if self.board[clickedIndex] != "none" and self.board[clickedIndex].color != self.nextTurn:
-                print("Not your turn")
                 return
                 
             self.pickedpiece = self.board[clickedIndex]
 
             if self.board[clickedIndex] == "none":
-                print("No piece in that square")
                 return
 
+            start_time = time.time()
             self.legalmoves = GenerateLegalMoves(clickedIndex, self.board, self.movesList)
+            end_time = time.time()
+            print(f"Time taken to generate legal moves: {(end_time - start_time) * 1000:.2f} milliseconds")
+
             for square in self.legalmoves:
                 self.button_identities[square].configure(background = "red", activebackground = "pink")
 
-            self.board[clickedIndex] = "none"
-
             photo = tk.PhotoImage(width=1, height=1)
-
             pressedButton.configure(image = photo)
             pressedButton.image = photo
 
             #print(self.board)
         else:
+            # Reset the colors of the legal moves
             for square in self.legalmoves:
                 legalMoveButton = self.button_identities[square]
                 legalMoveButtonColor = self.original_button_light_square_color if "lightsquare" in legalMoveButton._name else self.original_button_dark_square_color
                 legalMoveButton.configure(background = legalMoveButtonColor, activebackground = self.original_button_active_color)
-            
+
+
+
             if clickedIndex in self.legalmoves:
-
-                if self.pickedpiece.name == "King" and abs(self.pickedpiece.position - (clickedIndex)) == 2:
-                    eligableRooks = [piece for piece in self.board if piece != "none" and piece.name == "Rook" and piece.color == self.pickedpiece.color and piece.firstmove]
-                    
-                    if self.pickedpiece.position > clickedIndex:
-                        eligableRook = next((rook for rook in eligableRooks if clickedIndex > rook.position), None)
-                        self.board[clickedIndex+1] = eligableRook
-                        movedRookField = (self.button_identities[clickedIndex+1])
+                boardDifferences = makeMove(self.board, self.pickedpiece, self.legalmoves, clickedIndex, self.movesList, True)
+                for difference in boardDifferences:
+                    index, newState = difference
+                    if newState == "none":
+                        photo = tk.PhotoImage(width=1, height=1)
                     else:
-                        eligableRook = next((rook for rook in eligableRooks if clickedIndex < rook.position), None)
-                        self.board[clickedIndex-1] = eligableRook
-                        movedRookField = (self.button_identities[clickedIndex-1])
-                    
-                    self.board[eligableRook.position] = "none"
-                    
-                    emtpyFieldPhoto = tk.PhotoImage(width=1, height=1)
-                    emtpyField = (self.button_identities[eligableRook.position])
-                    emtpyField.configure(image = emtpyFieldPhoto)
-                    emtpyField.image = emtpyFieldPhoto
+                        photo = tk.PhotoImage(file= "./sprites/" + newState.color + newState.name + ".png")
 
-                    movedRookFieldPhoto = tk.PhotoImage(file= "./sprites/" + eligableRook.color + eligableRook.name + ".png")
-                    movedRookField.configure(image = movedRookFieldPhoto)
-                    movedRookField.image = movedRookFieldPhoto
+                    visualSquare = (self.button_identities[index])
+                    visualSquare.configure(image = photo)
+                    visualSquare.image = photo
 
-                self.pickedpiece.firstmove = False
+
                 self.nextTurn = "Black" if self.nextTurn == "White" else "White"
 
-                self.movesList.append((self.pickedpiece, self.pickedpiece.position, clickedIndex))
-                self.pickedpiece.position = clickedIndex
-
-                print(self.movesList)
-
-                photo = tk.PhotoImage(file= "./sprites/" + self.pickedpiece.color + self.pickedpiece.name + ".png")
-                pressedButton.configure(image = photo)
-                pressedButton.image = photo
-                self.board[clickedIndex] = self.pickedpiece
+                if setCheckMate(self.board, self.nextTurn):
+                    print("Checkmate")
             else:
                 pressedButton = (self.button_identities[self.pickedpiece.position])
                 self.board[self.pickedpiece.position] = self.pickedpiece
@@ -129,8 +115,8 @@ class Application(tk.Frame):
                 x = tk.Button(
                     self,
                     image=photo,
-                    height=70,
-                    width=70,
+                    height=100,
+                    width=100,
                     bg=self.original_button_light_square_color if (rank + phile) % 2 == 0 else self.original_button_dark_square_color,
                     activebackground=self.original_button_active_color,
                     command=partial(self.recordpress, (rank * 8 + phile)),

@@ -15,6 +15,9 @@ class Piece:
         "Rook": 5, "Knight": 3, "Bishop": 3, "Queen": 9, "Pawn": 1, "King": "N/A"
     }  # Mapping of full piece names to their values
     firstmove: bool = True  # Whether the piece has moved yet
+    inCheck: bool = False  # Whether the piece is in check
+    inDoubleCheck: bool = False  # Whether the piece is in double check
+    inCheckMate: bool = False  # Whether the piece is in checkmate
 
     # Constructor
     def __init__(self, name: str, position: int):
