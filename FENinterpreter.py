@@ -1,3 +1,8 @@
+from typing import List, Tuple
+
+from Piece import Piece
+
+
 def feninterpreter(FENstring):
     ranks = FENstring.split("/")
 
@@ -19,3 +24,19 @@ def feninterpreter(FENstring):
 
 
     return(board)
+
+
+def translateMoveList(movesList: List[Tuple[Piece, int, int]]):
+    translatedMoves = []
+
+    for move in movesList:
+        piece, start, end = move
+        translatedMoves.append(f"{piece.name} from {translateIndexToSquare(start)} to {translateIndexToSquare(end)}")
+
+    return translatedMoves
+
+def translateIndexToSquare(index: int):
+    rank = index // 8
+    phile = index % 8
+
+    return f"{chr(97 + phile)}{8 - rank}"

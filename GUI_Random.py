@@ -6,7 +6,7 @@ import re
 import time
 
 from Board import Board
-from FENinterpreter import feninterpreter
+from FENinterpreter import feninterpreter, translateMoveList
 from GenerateLegalMoves import GenerateLegalMoves, setCheckMate
 from Piece import Piece
 from makeMove import makeMove
@@ -34,17 +34,41 @@ class Application(tk.Frame):
     movesList: List[Tuple[Piece, int, int]] = []
 
     def __init__(self, master=None):
-        tk.Frame.__init__(self, master) 
+        tk.Frame.__init__(self, master)
         self.grid(column=0, row=0)
         self.createWidgets()
+        self.gameOver = False  # Flag to keep track of game state
+
+    def displayGameOver(self, message: str):
+        """Display a translucent overlay with a game over message and disable the board."""
+        # Set game over flag to True so further clicks are ignored.
+        self.gameOver = True
+
+        # Create an overlay Label that covers the entire frame.
+        overlay = tk.Label(
+            self,
+            text=message,
+            bg='white',
+            fg='black',
+            font=("Helvetica", 32),
+            justify="center"
+        )
+        # Use place geometry manager to cover the whole board.
+        overlay.place(relx=0.5, rely=0.5, anchor="center")
+
 
     def recordpress(self, position):
+        if self.gameOver:
+            return
+
         if self.nextTurn != self.human_color:
             return
         
         king = next((piece for piece in self.board if piece != "none" and piece.name == "King" and piece.color == self.human_color), None)
         if king.inCheckMate:
+            self.displayGameOver("Game Over: Checkmate! You lose.")
             print("Checkmate")
+            print(translateMoveList(self.movesList))
             return
 
         pressedButton = self.button_identities[position]
@@ -92,7 +116,7 @@ class Application(tk.Frame):
 
                 self.nextTurn = "Black" if self.nextTurn == "White" else "White"
                 setCheckMate(self.board, self.nextTurn)
-                
+
                 if self.nextTurn != self.human_color:
                     self.after(500, self.computerMove)
             else:
@@ -105,12 +129,17 @@ class Application(tk.Frame):
             self.pickedpiece = "none"
 
     def computerMove(self):
+        if self.gameOver:
+            return
+
         computer_color = self.nextTurn
 
+        # Check if the computer's king is in checkmate.
         king = next((piece for piece in self.board if piece != "none" and piece.name == "King" and piece.color == computer_color), None)
-
         if king.inCheckMate:
+            self.displayGameOver("Game Over: Checkmate! You win.")
             print("Checkmate")
+            print(translateMoveList(self.movesList))
             return
 
         computerPieces = [piece for piece in self.board if piece != "none" and piece.color == computer_color]
@@ -119,8 +148,8 @@ class Application(tk.Frame):
         moves = []
 
         while len(moves) == 0:
-          randomPiece = random.choice(computerPieces)
-          moves = GenerateLegalMoves(randomPiece.position, self.board, self.movesList)
+            randomPiece = random.choice(computerPieces)
+            moves = GenerateLegalMoves(randomPiece.position, self.board, self.movesList)
         
         destination = random.choice(moves)
 
@@ -139,7 +168,7 @@ class Application(tk.Frame):
 
         self.nextTurn = "Black" if self.nextTurn == "White" else "White"
         setCheckMate(self.board, self.nextTurn)
-        
+
 
     def createWidgets(self):
         for rank in range(8):
@@ -168,6 +197,6 @@ class Application(tk.Frame):
                 self.button_identities.append(x)
 
 
-app = Application()                       
+app = Application()
 app.master.title('Chess Game')
 app.mainloop()
