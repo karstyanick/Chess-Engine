@@ -4,11 +4,11 @@ from functools import partial
 
 from Board import Board
 from FENinterpreter import feninterpreter
-from GenerateLegalMoves import GenerateLegalMoves, setCheckMate
+from GenerateLegalMoves import GenerateLegalMoves
 from Piece import Piece
 import re
 
-from makeMove import makeMove
+from makeMove import makeMove, setCheckMate
 import time
 
 
@@ -73,7 +73,7 @@ class Application(tk.Frame):
 
 
             if clickedIndex in self.legalmoves:
-                boardDifferences = makeMove(self.board, self.pickedpiece, self.legalmoves, clickedIndex, self.movesList, True)
+                boardDifferences = makeMove(self.board, self.pickedpiece, clickedIndex, self.movesList, True)
                 for difference in boardDifferences:
                     index, newState = difference
                     if newState == "none":

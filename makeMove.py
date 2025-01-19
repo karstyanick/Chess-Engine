@@ -2,7 +2,7 @@ from typing import List, Tuple, Union
 from Board import Board
 from Piece import Piece
 
-def makeMove(board: Board, piece: Piece, legalMoves:List[int], movedTo: int, movesList: List[Tuple[Piece, int, int]], logCheck: bool):
+def makeMove(board: Board, piece: Piece, movedTo: int, movesList: List[Tuple[Piece, int, int]], logCheck: bool):
 
   oldBoard: Board = board[:]
 
@@ -24,10 +24,10 @@ def makeMove(board: Board, piece: Piece, legalMoves:List[int], movedTo: int, mov
   if piece.name == "Pawn" and not piece.firstmove:
       if (movedTo < 8 or movedTo > 55):
           piece.name = "Queen"
-      elif next((legalMove for legalMove in legalMoves if legalMove != piece.position + 8), None) and board[movedTo] == "none":
+      elif piece.position != movedTo + 8 and board[movedTo] == "none":
           board[movedTo + 8] = "none"
           
-      elif next((legalMove for legalMove in legalMoves if legalMove != piece.position - 8), None) and board[movedTo] == "none":
+      elif piece.position != movedTo - 8 and board[movedTo] == "none":
           board[movedTo - 8] = "none"
 
   piece.firstmove = False
@@ -47,38 +47,47 @@ def setCheck(board: List[Union[Piece, str]], logCheck: bool) -> None:
     whiteKing = next((boardPiece for boardPiece in board if boardPiece != "none" and boardPiece.name == "King" and boardPiece.color == "White"), None)
     blackKing = next((boardPiece for boardPiece in board if boardPiece != "none" and boardPiece.name == "King" and boardPiece.color == "Black"), None)
 
-    doubleCheckBlack = 0
+    if blackKing is not None:
+        doubleCheckBlack = 0
+        blackKing.inCheck = False
+        blackKing.inDoubleCheck = False
 
-    blackKing.inCheck = False
-    blackKing.inDoubleCheck = False
+        if next((boardPiece for boardPiece in board if boardPiece != "none" and boardPiece.color == "White" and blackKing.position in GenerateLegalMovesPreCheck(boardPiece.position, board, [])), None):
+            blackKing.inCheck = True
+            doubleCheckBlack += 1
+            if logCheck:
+                print("Check")
 
-    if next((boardPiece for boardPiece in board if boardPiece != "none" and boardPiece.color == "White" and blackKing.position in GenerateLegalMovesPreCheck(boardPiece.position, board, [])), None):
-        blackKing.inCheck = True
-        doubleCheckBlack += 1
-        if logCheck:
-            print("Check")
+        if doubleCheckBlack == 2:
+            blackKing.inDoubleCheck = True
+            if logCheck:
+                print("Double Check")
 
-    if doubleCheckBlack == 2:
-        blackKing.inDoubleCheck = True
-        if logCheck:
-            print("Double Check")
+    
+    if whiteKing is not None:
+        doubleCheckWhite = 0
+        whiteKing.inCheck = False
+        whiteKing.inDoubleCheck = False
 
-    doubleCheckWhite = 0
+        if next((boardPiece for boardPiece in board if boardPiece != "none" and boardPiece.color == "Black" and whiteKing.position in GenerateLegalMovesPreCheck(boardPiece.position, board, [])), None):
+            whiteKing.inCheck = True
+            doubleCheckWhite += 1
+            if logCheck:
+                print("Check")
 
-    whiteKing.inCheck = False
-    whiteKing.inDoubleCheck = False
-
-    if next((boardPiece for boardPiece in board if boardPiece != "none" and boardPiece.color == "Black" and whiteKing.position in GenerateLegalMovesPreCheck(boardPiece.position, board, [])), None):
-        whiteKing.inCheck = True
-        doubleCheckWhite += 1
-        if logCheck:
-            print("Check")
-
-    if doubleCheckWhite == 2:
-        whiteKing.inDoubleCheck = True
-        if logCheck:
-            print("Double Check")
+        if doubleCheckWhite == 2:
+            whiteKing.inDoubleCheck = True
+            if logCheck:
+                print("Double Check")
 
     return None
     
+def setCheckMate(board: List[Union[Piece, str]], king: Piece):
+    from GenerateLegalMoves import GenerateLegalMoves
+    for piece in board:
+        if piece != "none" and piece.color == king.color:
+            legalmoves = GenerateLegalMoves(piece.position, board, [])
+            if len(legalmoves) > 0:
+                return
 
+    king.inCheckMate = True

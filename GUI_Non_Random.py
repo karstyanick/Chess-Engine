@@ -1,3 +1,4 @@
+import copy
 from typing import List, Tuple
 import tkinter as tk
 from functools import partial
@@ -9,6 +10,7 @@ from Board import Board
 from FENinterpreter import feninterpreter, translateMoveList
 from GenerateLegalMoves import GenerateLegalMoves
 from Piece import Piece
+from evaluation import FindMove
 from makeMove import makeMove, setCheckMate
 
 
@@ -132,21 +134,14 @@ class Application(tk.Frame):
     def computerMove(self):
         if self.gameOver:
             return
-
-        computer_color = self.nextTurn
-
-        computerPieces = [piece for piece in self.board if piece != "none" and piece.color == computer_color]
-
-        randomPiece = None
-        moves = []
-
-        while len(moves) == 0:
-            randomPiece = random.choice(computerPieces)
-            moves = GenerateLegalMoves(randomPiece.position, self.board, self.movesList)
         
-        destination = random.choice(moves)
+        computer_color = "Black" if self.human_color == "White" else "White"
+        start_time = time.time()
+        chosenPiece, chosenDestination, _ = FindMove(self.board, computer_color, computer_color, self.movesList, 2)
+        end_time = time.time()
+        print(f"Time taken to generate legal moves for computer: {(end_time - start_time) * 1000:.2f} milliseconds")
 
-        boardDifferences = makeMove(self.board, randomPiece, destination, self.movesList, True)
+        boardDifferences = makeMove(self.board, chosenPiece, chosenDestination, self.movesList, True)
 
         for difference in boardDifferences:
             index, newState = difference

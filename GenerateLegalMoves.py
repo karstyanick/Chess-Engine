@@ -201,7 +201,7 @@ def GenerateLegalMoves(pieceIndex: int, board: List[Union[Piece, str]], previous
         boardCopy = copy.deepcopy(board)
         movesListCopy = copy.deepcopy(previousMovesList)
         pieceCopy = boardCopy[pieceIndex]
-        makeMove(boardCopy, pieceCopy, legalmoves, move, movesListCopy, False)
+        makeMove(boardCopy, pieceCopy, move, movesListCopy, False)
         if next((boardPiece for boardPiece in boardCopy if boardPiece != "none" and boardPiece.name == "King" and boardPiece.color == piece.color and boardPiece.inCheck), None):
             legalmoves.remove(move)
         
@@ -213,12 +213,13 @@ def GenerateLegalMoves(pieceIndex: int, board: List[Union[Piece, str]], previous
 
     return legalmoves
 
-def setCheckMate(board: List[Union[Piece, str]], color: str):
-    for piece in board:
-        if piece != "none" and piece.color == color:
-            legalmoves = GenerateLegalMoves(piece.position, board, [])
-            if len(legalmoves) > 0:
-                return
+def GenerateAllLegalMoves(board: List[Union[Piece, str]], color: str, previousMovesList: List[Tuple[Piece, int, int]]) -> List[Tuple[Piece, List[int]]]:
+    legalmoves: List[Tuple[Piece, List[int]]] = []
 
-    king = next((boardPiece for boardPiece in board if boardPiece != "none" and boardPiece.name == "King" and boardPiece.color == color), None)
-    king.inCheckMate = True
+    for index, piece in enumerate(board):
+        if piece != "none" and piece.color == color:
+            foundMoves = GenerateLegalMoves(index, board, previousMovesList)
+            if len(foundMoves) > 0:
+                legalmoves.append((piece, foundMoves))
+    
+    return legalmoves
