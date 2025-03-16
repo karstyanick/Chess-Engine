@@ -99,7 +99,7 @@ class Application(tk.Frame):
             if clickedIndex in self.legalmoves:
                 boardDifferences = makeMove(self.board, self.pickedpiece, clickedIndex, self.movesList, True)
                 for difference in boardDifferences:
-                    index, newState = difference
+                    index, newState, _ = difference
                     if newState == "none":
                         photo = tk.PhotoImage(width=1, height=1)
                     else:
@@ -144,7 +144,7 @@ class Application(tk.Frame):
         boardDifferences = makeMove(self.board, chosenPiece, chosenDestination, self.movesList, True)
 
         for difference in boardDifferences:
-            index, newState = difference
+            index, newState, _ = difference
             if newState == "none":
                 photo = tk.PhotoImage(width=1, height=1)
             else:

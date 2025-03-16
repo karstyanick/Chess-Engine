@@ -6,7 +6,7 @@ def makeMove(board: Board, piece: Piece, movedTo: int, movesList: List[Tuple[Pie
 
   oldBoard: Board = board[:]
 
-  if piece.name == "King" and abs(piece.position - (movedTo)) == 2:
+  if piece.name == "King" and piece.firstmove and abs(piece.position - (movedTo)) == 2:
     eligableRooks = [piece for piece in board if piece != "none" and piece.name == "Rook" and piece.color == piece.color and piece.firstmove]
     
     if piece.position > movedTo:
@@ -24,13 +24,15 @@ def makeMove(board: Board, piece: Piece, movedTo: int, movesList: List[Tuple[Pie
   if piece.name == "Pawn" and not piece.firstmove:
       if (movedTo < 8 or movedTo > 55):
           piece.name = "Queen"
-      elif piece.position != movedTo + 8 and board[movedTo] == "none":
+      elif piece.color == "White" and piece.position != movedTo + 8 and board[movedTo] == "none":
           board[movedTo + 8] = "none"
           
-      elif piece.position != movedTo - 8 and board[movedTo] == "none":
+      elif piece.position == "Black" and piece.position != movedTo - 8 and board[movedTo] == "none":
           board[movedTo - 8] = "none"
 
+  wasFirstMove = piece.firstmove
   piece.firstmove = False
+
   board[piece.position] = "none"
   board[movedTo] = piece
 
@@ -38,9 +40,19 @@ def makeMove(board: Board, piece: Piece, movedTo: int, movesList: List[Tuple[Pie
   piece.position = movedTo
   setCheck(board, logCheck)
 
-  differences = [(i, board[i]) for i in range(len(board)) if oldBoard[i] != board[i]]
+  differences = [(i, board[i], oldBoard[i]) for i in range(len(board)) if oldBoard[i] != board[i]]
 
   return differences
+
+def revertMove(board: Board, differences: List[Tuple[int, Union[Piece, str], Union[Piece, str]]], movesList: List[Tuple[Piece, int, int]]) -> None:
+    for difference in differences:
+        index, _, oldPiece = difference
+        board[index] = oldPiece
+        if oldPiece != "none":
+            oldPiece.position = index
+
+    movesList.pop()
+    return None
 
 def setCheck(board: List[Union[Piece, str]], logCheck: bool) -> None:
     from GenerateLegalMoves import GenerateLegalMovesPreCheck

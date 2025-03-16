@@ -75,7 +75,7 @@ class Application(tk.Frame):
             if clickedIndex in self.legalmoves:
                 boardDifferences = makeMove(self.board, self.pickedpiece, clickedIndex, self.movesList, True)
                 for difference in boardDifferences:
-                    index, newState = difference
+                    index, newState, _ = difference
                     if newState == "none":
                         photo = tk.PhotoImage(width=1, height=1)
                     else:
@@ -87,8 +87,8 @@ class Application(tk.Frame):
 
 
                 self.nextTurn = "Black" if self.nextTurn == "White" else "White"
-
-                if setCheckMate(self.board, self.nextTurn):
+                king = next((piece for piece in self.board if piece != "none" and piece.name == "King" and piece.color == self.nextTurn), None)
+                if setCheckMate(self.board, king):
                     print("Checkmate")
             else:
                 pressedButton = (self.button_identities[self.pickedpiece.position])

@@ -1,6 +1,6 @@
 from typing import List, Union, Tuple
 from Piece import Piece
-from makeMove import makeMove
+from makeMove import makeMove, revertMove
 import copy
 
 
@@ -198,12 +198,10 @@ def GenerateLegalMoves(pieceIndex: int, board: List[Union[Piece, str]], previous
     piece = board[pieceIndex]
 
     for move in legalmoves[:]:
-        boardCopy = copy.deepcopy(board)
-        movesListCopy = copy.deepcopy(previousMovesList)
-        pieceCopy = boardCopy[pieceIndex]
-        makeMove(boardCopy, pieceCopy, move, movesListCopy, False)
-        if next((boardPiece for boardPiece in boardCopy if boardPiece != "none" and boardPiece.name == "King" and boardPiece.color == piece.color and boardPiece.inCheck), None):
+        differences = makeMove(board, piece, move, previousMovesList, False)
+        if next((boardPiece for boardPiece in board if boardPiece != "none" and boardPiece.name == "King" and boardPiece.color == piece.color and boardPiece.inCheck), None):
             legalmoves.remove(move)
+        revertMove(board, differences, previousMovesList)
         
     if (piece.name == "King" and piece.position + 2 in legalmoves and piece.position + 1 not in legalmoves):
         legalmoves.remove(piece.position + 2)
