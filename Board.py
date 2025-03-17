@@ -1,6 +1,7 @@
 from typing import List, Union
 from Piece import Piece
 
+
 class Board:
     board: List[Union[Piece, str]]  # A list containing either Piece objects or "none"
 

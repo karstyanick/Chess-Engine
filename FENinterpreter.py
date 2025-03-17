@@ -22,8 +22,7 @@ def feninterpreter(FENstring):
                 board.append(x)
                 currentsquare += 1
 
-
-    return(board)
+    return board
 
 
 def translateMoveList(movesList: List[Tuple[Piece, int, int]]):
@@ -31,9 +30,12 @@ def translateMoveList(movesList: List[Tuple[Piece, int, int]]):
 
     for move in movesList:
         piece, start, end = move
-        translatedMoves.append(f"{piece.name} from {translateIndexToSquare(start)} to {translateIndexToSquare(end)}")
+        translatedMoves.append(
+            f"{piece.name} from {translateIndexToSquare(start)} to {translateIndexToSquare(end)}"
+        )
 
     return translatedMoves
+
 
 def translateIndexToSquare(index: int):
     rank = index // 8

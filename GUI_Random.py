@@ -48,14 +48,13 @@ class Application(tk.Frame):
         overlay = tk.Label(
             self,
             text=message,
-            bg='white',
-            fg='black',
+            bg="white",
+            fg="black",
             font=("Helvetica", 32),
-            justify="center"
+            justify="center",
         )
         # Use place geometry manager to cover the whole board.
         overlay.place(relx=0.5, rely=0.5, anchor="center")
-
 
     def recordpress(self, position):
         if self.gameOver:
@@ -63,24 +62,33 @@ class Application(tk.Frame):
 
         if self.nextTurn != self.human_color:
             return
-        
+
         pressedButton = self.button_identities[position]
         pressedButtonName = str(pressedButton)
-        clickedIndex = int(re.findall(r'\d+', pressedButtonName)[0])
+        clickedIndex = int(re.findall(r"\d+", pressedButtonName)[0])
 
         if self.pickedpiece == "none":
-            if self.board[clickedIndex] == "none" or self.board[clickedIndex].color != self.human_color:
+            if (
+                self.board[clickedIndex] == "none"
+                or self.board[clickedIndex].color != self.human_color
+            ):
                 return
 
             self.pickedpiece = self.board[clickedIndex]
 
             start_time = time.time()
-            self.legalmoves = GenerateLegalMoves(clickedIndex, self.board, self.movesList)
+            self.legalmoves = GenerateLegalMoves(
+                clickedIndex, self.board, self.movesList
+            )
             end_time = time.time()
-            print(f"Time taken to generate legal moves for player: {(end_time - start_time) * 1000:.2f} milliseconds")
+            print(
+                f"Time taken to generate legal moves for player: {(end_time - start_time) * 1000:.2f} milliseconds"
+            )
 
             for square in self.legalmoves:
-                self.button_identities[square].configure(background="red", activebackground="pink")
+                self.button_identities[square].configure(
+                    background="red", activebackground="pink"
+                )
 
             photo = tk.PhotoImage(width=1, height=1)
             pressedButton.configure(image=photo)
@@ -89,26 +97,44 @@ class Application(tk.Frame):
         else:
             for square in self.legalmoves:
                 legalMoveButton = self.button_identities[square]
-                legalMoveButtonColor = (self.original_button_light_square_color 
-                                        if "lightsquare" in legalMoveButton._name 
-                                        else self.original_button_dark_square_color)
-                legalMoveButton.configure(background=legalMoveButtonColor, activebackground=self.original_button_active_color)
+                legalMoveButtonColor = (
+                    self.original_button_light_square_color
+                    if "lightsquare" in legalMoveButton._name
+                    else self.original_button_dark_square_color
+                )
+                legalMoveButton.configure(
+                    background=legalMoveButtonColor,
+                    activebackground=self.original_button_active_color,
+                )
 
             if clickedIndex in self.legalmoves:
-                boardDifferences = makeMove(self.board, self.pickedpiece, clickedIndex, self.movesList, True)
+                boardDifferences = makeMove(
+                    self.board, self.pickedpiece, clickedIndex, self.movesList, True
+                )
                 for difference in boardDifferences:
                     index, newState = difference
                     if newState == "none":
                         photo = tk.PhotoImage(width=1, height=1)
                     else:
-                        photo = tk.PhotoImage(file="./sprites/" + newState.color + newState.name + ".png")
+                        photo = tk.PhotoImage(
+                            file="./sprites/" + newState.color + newState.name + ".png"
+                        )
 
                     visualSquare = self.button_identities[index]
                     visualSquare.configure(image=photo)
                     visualSquare.image = photo
 
                 computer_color = "Black" if self.human_color == "White" else "White"
-                computer_king = next((piece for piece in self.board if piece != "none" and piece.name == "King" and piece.color == computer_color), None)
+                computer_king = next(
+                    (
+                        piece
+                        for piece in self.board
+                        if piece != "none"
+                        and piece.name == "King"
+                        and piece.color == computer_color
+                    ),
+                    None,
+                )
                 setCheckMate(self.board, computer_king)
 
                 if computer_king.inCheckMate:
@@ -123,7 +149,12 @@ class Application(tk.Frame):
             else:
                 pressedButton = self.button_identities[self.pickedpiece.position]
                 self.board[self.pickedpiece.position] = self.pickedpiece
-                photo = tk.PhotoImage(file="./sprites/" + self.pickedpiece.color + self.pickedpiece.name + ".png")
+                photo = tk.PhotoImage(
+                    file="./sprites/"
+                    + self.pickedpiece.color
+                    + self.pickedpiece.name
+                    + ".png"
+                )
                 pressedButton.configure(image=photo)
                 pressedButton.image = photo
 
@@ -135,7 +166,11 @@ class Application(tk.Frame):
 
         computer_color = self.nextTurn
 
-        computerPieces = [piece for piece in self.board if piece != "none" and piece.color == computer_color]
+        computerPieces = [
+            piece
+            for piece in self.board
+            if piece != "none" and piece.color == computer_color
+        ]
 
         randomPiece = None
         moves = []
@@ -143,26 +178,39 @@ class Application(tk.Frame):
         while len(moves) == 0:
             randomPiece = random.choice(computerPieces)
             moves = GenerateLegalMoves(randomPiece.position, self.board, self.movesList)
-        
+
         destination = random.choice(moves)
 
-        boardDifferences = makeMove(self.board, randomPiece, destination, self.movesList, True)
+        boardDifferences = makeMove(
+            self.board, randomPiece, destination, self.movesList, True
+        )
 
         for difference in boardDifferences:
             index, newState = difference
             if newState == "none":
                 photo = tk.PhotoImage(width=1, height=1)
             else:
-                photo = tk.PhotoImage(file="./sprites/" + newState.color + newState.name + ".png")
+                photo = tk.PhotoImage(
+                    file="./sprites/" + newState.color + newState.name + ".png"
+                )
 
             visualSquare = self.button_identities[index]
             visualSquare.configure(image=photo)
             visualSquare.image = photo
 
         human_color = "Black" if computer_color == "White" else "White"
-        human_king = next((piece for piece in self.board if piece != "none" and piece.name == "King" and piece.color == human_color), None)
+        human_king = next(
+            (
+                piece
+                for piece in self.board
+                if piece != "none"
+                and piece.name == "King"
+                and piece.color == human_color
+            ),
+            None,
+        )
         setCheckMate(self.board, human_king)
-        
+
         if human_king.inCheckMate:
             self.displayGameOver("Game Over: Checkmate! You Loose.")
             print("Checkmate")
@@ -170,7 +218,6 @@ class Application(tk.Frame):
             return
 
         self.nextTurn = "Black" if self.nextTurn == "White" else "White"
-
 
     def createWidgets(self):
         for rank in range(8):
@@ -188,10 +235,18 @@ class Application(tk.Frame):
                     image=photo,
                     height=100,
                     width=100,
-                    bg=self.original_button_light_square_color if (rank + phile) % 2 == 0 else self.original_button_dark_square_color,
+                    bg=(
+                        self.original_button_light_square_color
+                        if (rank + phile) % 2 == 0
+                        else self.original_button_dark_square_color
+                    ),
                     activebackground=self.original_button_active_color,
                     command=partial(self.recordpress, (rank * 8 + phile)),
-                    name=f"lightsquare-{rank*8+phile}" if (rank + phile) % 2 == 0 else f"darksquare-{rank*8+phile}",
+                    name=(
+                        f"lightsquare-{rank*8+phile}"
+                        if (rank + phile) % 2 == 0
+                        else f"darksquare-{rank*8+phile}"
+                    ),
                 )
 
                 x.grid(column=phile, row=rank)
@@ -200,5 +255,5 @@ class Application(tk.Frame):
 
 
 app = Application()
-app.master.title('Chess Game')
+app.master.title("Chess Game")
 app.mainloop()
