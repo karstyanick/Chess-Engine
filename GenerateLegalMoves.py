@@ -1,4 +1,5 @@
-from typing import List, Union, Tuple, cast
+from typing import List, Tuple, cast
+from Board import BoardState
 from Piece import Piece
 from makeMove import makeMove, revertMove
 
@@ -10,6 +11,7 @@ whitepawnmoves: List[int] = [-7, -8, -9]
 blackpawnmoves: List[int] = [7, 8, 9]
 knightmoves: List[int] = [-6, -10, -15, -17, 6, 10, 15, 17]
 kingmoves: List[int] = [-8, 8, -1, 1, 7, -7, 9, -9]
+
 
 def singleSquareMovesToEdge(index: int) -> List[int]:
     NumOfSquaresToEdge: List[int] = []
@@ -57,7 +59,7 @@ def singleSquareMovesToEdge(index: int) -> List[int]:
 
 
 def collision(
-    board: List[Union[Piece, str]], piece: Piece, index: int, offset: int
+    board: BoardState, piece: Piece, index: int, offset: int
 ) -> List[bool]:
     collisionlist: List[bool] = [False, False]
 
@@ -65,7 +67,7 @@ def collision(
 
     if boardPiece == "none":
         return collisionlist
-    
+
     boardPiece = cast(Piece, boardPiece)
 
     if 0 <= index + offset < 64:
@@ -79,7 +81,7 @@ def collision(
 
 
 def getDefaultMovesForOffset(
-    Board: List[Union[Piece, str]],
+    Board: BoardState,
     Piece: Piece,
     pieceIndex: int,
     offset: int,
@@ -129,7 +131,7 @@ def getNumSquaresToEdgeBasedOnOffset(pieceIndex: int, offset: int) -> int:
 
 
 def generateLegalRookMoves(
-    piece: Piece, board: List[Union[Piece, str]], pieceIndex: int, moveset: List[int]
+    piece: Piece, board: BoardState, pieceIndex: int, moveset: List[int]
 ) -> List[int]:
     legalMoves: List[int] = []
 
@@ -143,7 +145,7 @@ def generateLegalRookMoves(
 
 
 def generateLegalBishopMoves(
-    piece: Piece, board: List[Union[Piece, str]], pieceIndex: int, moveset: List[int]
+    piece: Piece, board: BoardState, pieceIndex: int, moveset: List[int]
 ) -> List[int]:
     legalMoves: List[int] = []
 
@@ -157,7 +159,7 @@ def generateLegalBishopMoves(
 
 
 def generateLegalQueenMoves(
-    piece: Piece, board: List[Union[Piece, str]], pieceIndex: int, moveset: List[int]
+    piece: Piece, board: BoardState, pieceIndex: int, moveset: List[int]
 ) -> List[int]:
     legalMoves: List[int] = []
 
@@ -172,10 +174,10 @@ def generateLegalQueenMoves(
 
 def generateLegalBlackPawnMoves(
     piece: Piece,
-    board: List[Union[Piece, str]],
+    board: BoardState,
     pieceIndex: int,
     moveset: List[int],
-    previousMovesList: List[Tuple[Piece, int, int]],
+    previousMovesList: List[Tuple[Piece, int, int, str]],
 ) -> List[int]:
     legalMoves: List[int] = []
 
@@ -212,10 +214,10 @@ def generateLegalBlackPawnMoves(
 
 def generateLegalWhitePawnMoves(
     piece: Piece,
-    board: List[Union[Piece, str]],
+    board: BoardState,
     pieceIndex: int,
     moveset: List[int],
-    previousMovesList: List[Tuple[Piece, int, int]],
+    previousMovesList: List[Tuple[Piece, int, int, str]],
 ) -> List[int]:
     legalMoves: List[int] = []
 
@@ -251,18 +253,21 @@ def generateLegalWhitePawnMoves(
 
 
 def generateLegalKingMoves(
-    piece: Piece, board: List[Union[Piece, str]], pieceIndex: int, moveset: List[int]
+    piece: Piece, board: BoardState, pieceIndex: int, moveset: List[int]
 ) -> List[int]:
     legalMoves: List[int] = []
-    eligableRooks = cast(List[Piece], [
-        boardPiece
-        for boardPiece in board
-        if boardPiece != "none"
-        and cast(Piece, boardPiece).name == "Rook"
-        and cast(Piece, boardPiece).color == piece.color
-        and cast(Piece, boardPiece).firstmove
-        and piece.firstmove
-    ])
+    eligableRooks = cast(
+        List[Piece],
+        [
+            boardPiece
+            for boardPiece in board
+            if boardPiece != "none"
+            and cast(Piece, boardPiece).name == "Rook"
+            and cast(Piece, boardPiece).color == piece.color
+            and cast(Piece, boardPiece).firstmove
+            and piece.firstmove
+        ],
+    )
 
     for offset in moveset:
         numberOfSquaresToEdge = getNumSquaresToEdgeBasedOnOffset(pieceIndex, offset)
@@ -295,7 +300,7 @@ def generateLegalKingMoves(
 
 
 def generateLegalKnightMoves(
-    piece: Piece, board: List[Union[Piece, str]], pieceIndex: int, moveset: List[int]
+    piece: Piece, board: BoardState, pieceIndex: int, moveset: List[int]
 ) -> List[int]:
     legalMoves: List[int] = []
 
@@ -310,38 +315,42 @@ def generateLegalKnightMoves(
 
 def GenerateLegalMovesPreCheck(
     pieceIndex: int,
-    board: List[Union[Piece, str]],
-    previousMovesList: List[Tuple[Piece, int, int]],
+    board: BoardState,
+    previousMovesList: List[Tuple[Piece, int, int, str]],
 ) -> List[int]:
     legalmoves: List[int] = []
-    piece = cast(Piece, board[pieceIndex])
-
-    if piece.name == "Rook":
-        legalmoves += generateLegalRookMoves(piece, board, pieceIndex, rookmoves)
-    elif piece.name == "Bishop":
-        legalmoves += generateLegalBishopMoves(piece, board, pieceIndex, bishopmoves)
-    elif piece.name == "Queen":
-        legalmoves += generateLegalQueenMoves(piece, board, pieceIndex, queenmoves)
-    elif piece.name == "Pawn" and piece.color == "Black":
-        legalmoves += generateLegalBlackPawnMoves(
-            piece, board, pieceIndex, blackpawnmoves, previousMovesList
-        )
-    elif piece.name == "Pawn" and piece.color == "White":
-        legalmoves += generateLegalWhitePawnMoves(
-            piece, board, pieceIndex, whitepawnmoves, previousMovesList
-        )
-    elif piece.name == "Knight":
-        legalmoves += generateLegalKnightMoves(piece, board, pieceIndex, knightmoves)
-    elif piece.name == "King":
-        legalmoves += generateLegalKingMoves(piece, board, pieceIndex, kingmoves)
+    piece = board[pieceIndex]
+    
+    if piece == "none":
+        return legalmoves
+    else:
+        piece = cast(Piece, piece)
+        if piece.name == "Rook":
+            legalmoves += generateLegalRookMoves(piece, board, pieceIndex, rookmoves)
+        elif piece.name == "Bishop":
+            legalmoves += generateLegalBishopMoves(piece, board, pieceIndex, bishopmoves)
+        elif piece.name == "Queen":
+            legalmoves += generateLegalQueenMoves(piece, board, pieceIndex, queenmoves)
+        elif piece.name == "Pawn" and piece.color == "Black":
+            legalmoves += generateLegalBlackPawnMoves(
+                piece, board, pieceIndex, blackpawnmoves, previousMovesList
+            )
+        elif piece.name == "Pawn" and piece.color == "White":
+            legalmoves += generateLegalWhitePawnMoves(
+                piece, board, pieceIndex, whitepawnmoves, previousMovesList
+            )
+        elif piece.name == "Knight":
+            legalmoves += generateLegalKnightMoves(piece, board, pieceIndex, knightmoves)
+        elif piece.name == "King":
+            legalmoves += generateLegalKingMoves(piece, board, pieceIndex, kingmoves)
 
     return legalmoves
 
 
 def GenerateLegalMoves(
     pieceIndex: int,
-    board: List[Union[Piece, str]],
-    previousMovesList: List[Tuple[Piece, int, int]],
+    board: BoardState,
+    previousMovesList: List[Tuple[Piece, int, int, str]],
 ) -> List[int]:
     legalmoves = GenerateLegalMovesPreCheck(pieceIndex, board, previousMovesList)
     piece = cast(Piece, board[pieceIndex])
@@ -354,7 +363,7 @@ def GenerateLegalMoves(
                 for boardPiece in board
                 if boardPiece != "none"
                 and cast(Piece, boardPiece).name == "King"
-                and cast(Piece, boardPiece).name == piece.color
+                and cast(Piece, boardPiece).color == piece.color
                 and cast(Piece, boardPiece).inCheck
             ),
             None,
@@ -380,9 +389,9 @@ def GenerateLegalMoves(
 
 
 def GenerateAllLegalMoves(
-    board: List[Union[Piece, str]],
+    board: BoardState,
     color: str,
-    previousMovesList: List[Tuple[Piece, int, int]],
+    previousMovesList: List[Tuple[Piece, int, int, str]],
 ) -> List[Tuple[Piece, List[int]]]:
     legalmoves: List[Tuple[Piece, List[int]]] = []
 

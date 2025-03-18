@@ -31,13 +31,14 @@ class Piece:
     inCheckMate: bool = False  # Whether the piece is in checkmate
 
     color: str  # Color of the piece
-    name: str  # Full name of the piece 
+    name: str  # Full name of the piece
     value: int  # Value of the piece
     position: int  # Position of the piece
     inplay: bool  # Whether the piece
 
     # Constructor
     def __init__(self, name: str, position: int):
+        self.notationName: str = name
         self.name: str = self.namedict[name]
         self.value: int = self.valuedict[self.name]
         self.color: str = "Black" if name.islower() else "White"

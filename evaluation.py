@@ -1,17 +1,18 @@
 from math import sqrt
+from Board import BoardState
 from makeMove import makeMove
 from GenerateLegalMoves import GenerateAllLegalMoves
 from Piece import Piece
-from typing import List, Tuple, Union, cast
+from typing import List, Tuple, cast
 import copy
 import random
 
 
 def FindMove(
-    board: List[Union[Piece, str]],
+    board: BoardState,
     movesColor: str,
     evaluationColor: str,
-    movesList: List[Tuple[Piece, int, int]],
+    movesList: List[Tuple[Piece, int, int, str]],
     depth: int,
 ):
     moves = GenerateAllLegalMoves(board, movesColor, movesList)
@@ -52,7 +53,7 @@ def FindMove(
     return random.choice(max_evaluations)
 
 
-def EvaluatePosition(board: List[Union[Piece, str]], color: str) -> int:
+def EvaluatePosition(board: BoardState, color: str) -> int:
     white_value = 0
     black_value = 0
 
@@ -76,6 +77,7 @@ def EvaluatePosition(board: List[Union[Piece, str]], color: str) -> int:
         return white_value - black_value
     else:
         return black_value - white_value
+
 
 def AddCenterValuation(piece: Piece) -> int:
     pos = piece.position

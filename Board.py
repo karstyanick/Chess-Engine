@@ -1,15 +1,16 @@
 from typing import List, Union
 from Piece import Piece
 
+BoardState = List[Union[Piece, str]]
 
 class Board:
-    board: List[Union[Piece, str]]  # A list containing either Piece objects or "none"
+    board: BoardState  # A list containing either Piece objects or "none"
 
-    def __init__(self, board: List[Union[Piece, str]]):
-        self.board = board
+    def __init__(self, initBoard: List[str]):
+        self.board = []
 
-        for i, square in enumerate(self.board):
-            if square != "none":
-                self.board[i] = Piece(square, i)  # Replace with a Piece object
+        for i, square in enumerate(initBoard):
+            if square == "none":
+                self.board.append("none")
             else:
-                continue
+                self.board.append(Piece(square, i))

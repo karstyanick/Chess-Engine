@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, cast
 import tkinter as tk
 from functools import partial
 import random
@@ -6,7 +6,7 @@ import re
 import time
 
 from Board import Board
-from FENinterpreter import feninterpreter, translateMoveList
+from FENinterpreter import feninterpreter
 from GenerateLegalMoves import GenerateLegalMoves
 from Piece import Piece
 from makeMove import makeMove, setCheckMate
@@ -23,7 +23,7 @@ class Application(tk.Frame):
     human_color = "White"
     nextTurn = "White"
 
-    button_identities = []
+    button_identities: List[tk.Button] = []
 
     pickedpiece = "none"
 
@@ -31,10 +31,10 @@ class Application(tk.Frame):
     original_button_light_square_color = "white"
     original_button_dark_square_color = "gray"
 
-    movesList: List[Tuple[Piece, int, int]] = []
+    movesList: List[Tuple[Piece, int, int, str]] = []
 
-    def __init__(self, master=None):
-        tk.Frame.__init__(self, master)
+    def __init__(self):
+        tk.Frame.__init__(self)
         self.grid(column=0, row=0)
         self.createWidgets()
         self.gameOver = False  # Flag to keep track of game state
@@ -56,7 +56,7 @@ class Application(tk.Frame):
         # Use place geometry manager to cover the whole board.
         overlay.place(relx=0.5, rely=0.5, anchor="center")
 
-    def recordpress(self, position):
+    def recordpress(self, position: int):
         if self.gameOver:
             return
 
@@ -68,9 +68,11 @@ class Application(tk.Frame):
         clickedIndex = int(re.findall(r"\d+", pressedButtonName)[0])
 
         if self.pickedpiece == "none":
+            self.pickedpiece = cast(str, self.pickedpiece)
+
             if (
                 self.board[clickedIndex] == "none"
-                or self.board[clickedIndex].color != self.human_color
+                or cast(Piece, self.board[clickedIndex]).color != self.human_color
             ):
                 return
 
@@ -92,14 +94,16 @@ class Application(tk.Frame):
 
             photo = tk.PhotoImage(width=1, height=1)
             pressedButton.configure(image=photo)
-            pressedButton.image = photo
+            pressedButton.image = photo # type: ignore
 
         else:
+            self.pickedpiece = cast(Piece, self.pickedpiece)
+
             for square in self.legalmoves:
                 legalMoveButton = self.button_identities[square]
                 legalMoveButtonColor = (
                     self.original_button_light_square_color
-                    if "lightsquare" in legalMoveButton._name
+                    if "lightsquare" in legalMoveButton._name # type: ignore
                     else self.original_button_dark_square_color
                 )
                 legalMoveButton.configure(
@@ -112,35 +116,37 @@ class Application(tk.Frame):
                     self.board, self.pickedpiece, clickedIndex, self.movesList, True
                 )
                 for difference in boardDifferences:
-                    index, newState = difference
+                    index, newState, _ = difference
                     if newState == "none":
                         photo = tk.PhotoImage(width=1, height=1)
                     else:
+                        newState = cast(Piece, newState)
                         photo = tk.PhotoImage(
                             file="./sprites/" + newState.color + newState.name + ".png"
                         )
 
                     visualSquare = self.button_identities[index]
                     visualSquare.configure(image=photo)
-                    visualSquare.image = photo
+                    visualSquare.image = photo # type: ignore
 
                 computer_color = "Black" if self.human_color == "White" else "White"
-                computer_king = next(
+                
+                computer_king = cast(Piece, next(
                     (
-                        piece
+                        cast(Piece, piece)
                         for piece in self.board
                         if piece != "none"
-                        and piece.name == "King"
-                        and piece.color == computer_color
+                        and cast(Piece, piece).name == "King"
+                        and cast(Piece, piece).color == computer_color
                     ),
                     None,
-                )
+                ))
+                
                 setCheckMate(self.board, computer_king)
 
                 if computer_king.inCheckMate:
                     self.displayGameOver("Game Over: Checkmate! You Win.")
                     print("Checkmate")
-                    print(translateMoveList(self.movesList))
 
                 self.nextTurn = "Black" if self.nextTurn == "White" else "White"
 
@@ -156,7 +162,7 @@ class Application(tk.Frame):
                     + ".png"
                 )
                 pressedButton.configure(image=photo)
-                pressedButton.image = photo
+                pressedButton.image = photo # type: ignore
 
             self.pickedpiece = "none"
 
@@ -167,9 +173,9 @@ class Application(tk.Frame):
         computer_color = self.nextTurn
 
         computerPieces = [
-            piece
+            cast(Piece, piece)
             for piece in self.board
-            if piece != "none" and piece.color == computer_color
+            if piece != "none" and cast(Piece, piece).color == computer_color
         ]
 
         randomPiece = None
@@ -182,39 +188,40 @@ class Application(tk.Frame):
         destination = random.choice(moves)
 
         boardDifferences = makeMove(
-            self.board, randomPiece, destination, self.movesList, True
+            self.board, cast(Piece, randomPiece), destination, self.movesList, True
         )
 
         for difference in boardDifferences:
-            index, newState = difference
+            index, newState, _ = difference
             if newState == "none":
                 photo = tk.PhotoImage(width=1, height=1)
             else:
+                newState = cast(Piece, newState)
                 photo = tk.PhotoImage(
                     file="./sprites/" + newState.color + newState.name + ".png"
                 )
 
             visualSquare = self.button_identities[index]
             visualSquare.configure(image=photo)
-            visualSquare.image = photo
+            visualSquare.image = photo # type: ignore
 
         human_color = "Black" if computer_color == "White" else "White"
-        human_king = next(
+        human_king = cast(Piece, next(
             (
-                piece
+                cast(Piece, piece)
                 for piece in self.board
                 if piece != "none"
-                and piece.name == "King"
-                and piece.color == human_color
+                and cast(Piece, piece).name == "King"
+                and cast(Piece, piece).color == human_color
             ),
             None,
-        )
+        ))
+
         setCheckMate(self.board, human_king)
 
         if human_king.inCheckMate:
             self.displayGameOver("Game Over: Checkmate! You Loose.")
             print("Checkmate")
-            print(translateMoveList(self.movesList))
             return
 
         self.nextTurn = "Black" if self.nextTurn == "White" else "White"
@@ -224,11 +231,13 @@ class Application(tk.Frame):
             for phile in range(8):
                 piece = self.board[rank * 8 + phile]
 
-                photo = (
-                    tk.PhotoImage(file="./sprites/" + piece.color + piece.name + ".png")
-                    if piece != "none"
-                    else tk.PhotoImage(width=1, height=1)
-                )
+                if piece == "none":
+                    photo = tk.PhotoImage(width=1, height=1)
+                else:
+                    piece = cast(Piece, piece)
+                    photo = tk.PhotoImage(
+                        file="./sprites/" + piece.color + piece.name + ".png"
+                    )
 
                 x = tk.Button(
                     self,
@@ -250,10 +259,9 @@ class Application(tk.Frame):
                 )
 
                 x.grid(column=phile, row=rank)
-                x.image = photo
+                x.image = photo # type: ignore
                 self.button_identities.append(x)
 
 
 app = Application()
-app.master.title("Chess Game")
 app.mainloop()

@@ -1,49 +1,58 @@
 from typing import List, Tuple, Union, cast
-from Board import Board
+from Board import BoardState
 from Piece import Piece
+from FENinterpreter import generateNotation
 
 
 def makeMove(
-    board: List[Union[Piece, str]],
+    board: BoardState,
     piece: Piece,
     movedTo: int,
-    movesList: List[Tuple[Piece, int, int]],
+    movesList: List[Tuple[Piece, int, int, str]],
     logCheck: bool,
+    affectFirstMove: bool = False,
 ):
 
-    oldBoard: List[Union[Piece, str]] = board[:]
+    oldBoard: BoardState = board[:]
+
+    wasKingsideCastle = False
+    wasQueensideCastle = False
+
+    wasEnPassant = False
 
     if (
         piece.name == "King"
         and piece.firstmove
         and abs(piece.position - (movedTo)) == 2
     ):
-        eligableRooks = cast(
-            List[Piece],
-            [
-                piece
-                for piece in board
-                if piece != "none"
-                and cast(Piece, piece).name == "Rook"
-                and cast(Piece, piece).color == cast(Piece, piece).color
-                and cast(Piece, piece).firstmove
-            ],
-        )
+        eligableRooks = [
+            cast(Piece, boardPiece)
+            for boardPiece in board
+            if boardPiece != "none"
+            and cast(Piece, boardPiece).name == "Rook"
+            and cast(Piece, boardPiece).color == piece.color
+            and cast(Piece, boardPiece).firstmove
+        ]
 
         if piece.position > movedTo:
             eligableRook = next(
                 (rook for rook in eligableRooks if movedTo > rook.position), None
             )
-            board[movedTo + 1] = eligableRook
-            board[eligableRook.position] = "none"
-            eligableRook.position = movedTo + 1
+
+            if eligableRook is not None:
+                board[movedTo + 1] = eligableRook
+                board[eligableRook.position] = "none"
+                eligableRook.position = movedTo + 1
+                wasQueensideCastle = True
         else:
             eligableRook = next(
                 (rook for rook in eligableRooks if movedTo < rook.position), None
             )
-            board[movedTo - 1] = eligableRook
-            board[eligableRook.position] = "none"
-            eligableRook.position = movedTo - 1
+            if eligableRook is not None:
+                board[movedTo - 1] = eligableRook
+                board[eligableRook.position] = "none"
+                eligableRook.position = movedTo - 1
+                wasKingsideCastle = True
 
     if piece.name == "Pawn" and not piece.firstmove:
         if movedTo < 8 or movedTo > 55:
@@ -54,66 +63,99 @@ def makeMove(
             and board[movedTo] == "none"
         ):
             board[movedTo + 8] = "none"
+            wasEnPassant = True
 
         elif (
-            piece.position == "Black"
+            piece.color == "Black"
             and piece.position != movedTo - 8
             and board[movedTo] == "none"
         ):
             board[movedTo - 8] = "none"
+            wasEnPassant = True
 
-    wasFirstMove = piece.firstmove
-    piece.firstmove = False
+    if affectFirstMove:
+        piece.firstmove = False
+
+    wasCapture = board[movedTo] != "none"
 
     board[piece.position] = "none"
     board[movedTo] = piece
 
-    movesList.append((piece, piece.position, movedTo))
     piece.position = movedTo
+
     setCheck(board, logCheck)
+    
+    king = cast(Piece, next(
+        (
+            cast(Piece, boardPiece)
+            for boardPiece in board
+            if boardPiece != "none"
+            and cast(Piece, boardPiece).name == "King"
+            and cast(Piece, boardPiece).color != piece.color
+        ),
+        None,
+    ))
+
+    wasCheck = king.inCheck
 
     differences = [
         (i, board[i], oldBoard[i]) for i in range(len(board)) if oldBoard[i] != board[i]
     ]
 
+    notation = generateNotation(
+        piece,
+        piece.position,
+        movedTo,
+        wasCapture,
+        wasKingsideCastle,
+        wasQueensideCastle,
+        wasEnPassant,
+        wasCheck and logCheck,
+    )
+
+    movesList.append((piece, piece.position, movedTo, notation))
+
+    if logCheck:
+        print(notation)
+
     return differences
 
-
 def revertMove(
-    board: Board,
+    board: BoardState,
     differences: List[Tuple[int, Union[Piece, str], Union[Piece, str]]],
-    movesList: List[Tuple[Piece, int, int]],
+    movesList: List[Tuple[Piece, int, int, str]],
 ) -> None:
     for difference in differences:
         index, _, oldPiece = difference
         board[index] = oldPiece
         if oldPiece != "none":
-            oldPiece.position = index
+            cast(Piece, oldPiece).position = index
 
     movesList.pop()
     return None
 
 
-def setCheck(board: List[Union[Piece, str]], logCheck: bool) -> None:
+def setCheck(board: BoardState, logCheck: bool) -> None:
     from GenerateLegalMoves import GenerateLegalMovesPreCheck
 
     whiteKing = next(
         (
-            boardPiece
+            cast(Piece, boardPiece)
             for boardPiece in board
             if boardPiece != "none"
-            and boardPiece.name == "King"
-            and boardPiece.color == "White"
+            and cast(Piece, boardPiece).name == "King"
+            and cast(Piece, boardPiece).color == "White"
         ),
         None,
     )
+
     blackKing = next(
         (
-            boardPiece
+            cast(Piece, boardPiece)
             for boardPiece in board
             if boardPiece != "none"
-            and boardPiece.name == "King"
-            and boardPiece.color == "Black"
+            and cast(Piece, boardPiece).name == "King"
+            and cast(Piece, boardPiece).color == "Black"
         ),
         None,
     )
@@ -128,9 +170,9 @@ def setCheck(board: List[Union[Piece, str]], logCheck: bool) -> None:
                 boardPiece
                 for boardPiece in board
                 if boardPiece != "none"
-                and boardPiece.color == "White"
+                and cast(Piece, boardPiece).color == "White"
                 and blackKing.position
-                in GenerateLegalMovesPreCheck(boardPiece.position, board, [])
+                in GenerateLegalMovesPreCheck(cast(Piece, boardPiece).position, board, [])
             ),
             None,
         ):
@@ -139,10 +181,11 @@ def setCheck(board: List[Union[Piece, str]], logCheck: bool) -> None:
             if logCheck:
                 print("Check")
 
-        if doubleCheckBlack == 2:
-            blackKing.inDoubleCheck = True
-            if logCheck:
-                print("Double Check")
+        # if doubleCheckBlack == 2:
+        #     blackKing.inDoubleCheck = True
+        #     if logCheck:
+        #         print("Double Check")
+        #     return True
 
     if whiteKing is not None:
         doubleCheckWhite = 0
@@ -154,9 +197,9 @@ def setCheck(board: List[Union[Piece, str]], logCheck: bool) -> None:
                 boardPiece
                 for boardPiece in board
                 if boardPiece != "none"
-                and boardPiece.color == "Black"
+                and cast(Piece, boardPiece).color == "Black"
                 and whiteKing.position
-                in GenerateLegalMovesPreCheck(boardPiece.position, board, [])
+                in GenerateLegalMovesPreCheck(cast(Piece, boardPiece).position, board, [])
             ),
             None,
         ):
@@ -165,19 +208,23 @@ def setCheck(board: List[Union[Piece, str]], logCheck: bool) -> None:
             if logCheck:
                 print("Check")
 
-        if doubleCheckWhite == 2:
-            whiteKing.inDoubleCheck = True
-            if logCheck:
-                print("Double Check")
+        # if doubleCheckWhite == 2:
+        #     whiteKing.inDoubleCheck = True
+        #     if logCheck:
+        #         print("Double Check")
+        #     return True
 
-    return None
 
-
-def setCheckMate(board: List[Union[Piece, str]], king: Piece):
+def setCheckMate(board: BoardState, king: Piece):
     from GenerateLegalMoves import GenerateLegalMoves
 
     for piece in board:
-        if piece != "none" and piece.color == king.color:
+        if piece == "none":
+            continue
+
+        piece = cast(Piece, piece)
+
+        if piece.color == king.color:
             legalmoves = GenerateLegalMoves(piece.position, board, [])
             if len(legalmoves) > 0:
                 return
