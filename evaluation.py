@@ -6,6 +6,13 @@ from Piece import Piece
 from typing import List, Tuple, cast
 import random
 
+counter = 0
+
+
+def counterIncr() -> None:
+    global counter
+    counter += 1  # type: ignore
+
 
 def FindMove(
     board: Board,
@@ -14,6 +21,8 @@ def FindMove(
     evaluationColor: str,
     movesList: List[Tuple[Piece, int, int, str]],
     depth: int,
+    isBase: bool = False,
+    previousMaxEval: int = -100000,
 ):
     moves = GenerateAllLegalMoves(board, boardState, movesColor, movesList)
     evaluations: List[Tuple[Piece, int, int]] = []
@@ -42,6 +51,8 @@ def FindMove(
                     False,
                 )
 
+                counterIncr()
+
                 evaluations.append(
                     (piece, destination, EvaluatePosition(boardState, evaluationColor))
                 )
@@ -51,12 +62,16 @@ def FindMove(
                 evaluations.append(
                     (piece, destination, EvaluatePosition(boardState, evaluationColor))
                 )
-            
-            revertMove(boardState, outer_differences, [])
+                counterIncr()
 
+            revertMove(boardState, outer_differences, [])
 
     evaluations.sort(key=lambda x: x[2], reverse=True)
     max_evaluations = [e for e in evaluations if e[2] == evaluations[0][2]]
+    if isBase:
+        global counter
+        print(counter)
+        counter = 0
     return random.choice(max_evaluations)
 
 

@@ -36,6 +36,8 @@ class Piece:
     position: int  # Position of the piece
     inplay: bool  # Whether the piece
 
+    currentlyAttackedSquares: list[int] = []  # Squares the piece is attacking
+
     # Constructor
     def __init__(self, name: str, position: int):
         self.notationName: str = name

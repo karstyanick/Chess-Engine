@@ -21,11 +21,7 @@ def makeMove(
 
     wasEnPassant = False
 
-    if (
-        piece.name == "King"
-        and piece.firstmove
-        and abs(piece.position - (movedTo)) == 2
-    ):
+    if piece.name == "King" and piece.firstmove and abs(piece.position - (movedTo)) == 2:
         eligableRooks = [
             cast(Piece, boardPiece)
             for boardPiece in boardState
@@ -36,9 +32,7 @@ def makeMove(
         ]
 
         if piece.position > movedTo:
-            eligableRook = next(
-                (rook for rook in eligableRooks if movedTo > rook.position), None
-            )
+            eligableRook = next((rook for rook in eligableRooks if movedTo > rook.position), None)
 
             if eligableRook is not None:
                 boardState[movedTo + 1] = eligableRook
@@ -46,9 +40,7 @@ def makeMove(
                 eligableRook.position = movedTo + 1
                 wasQueensideCastle = True
         else:
-            eligableRook = next(
-                (rook for rook in eligableRooks if movedTo < rook.position), None
-            )
+            eligableRook = next((rook for rook in eligableRooks if movedTo < rook.position), None)
             if eligableRook is not None:
                 boardState[movedTo - 1] = eligableRook
                 boardState[eligableRook.position] = "none"
@@ -85,16 +77,18 @@ def makeMove(
     piece.position = movedTo
 
     setCheck(board, boardState, logCheck)
-    
+
     if piece.color == "White":
-        king = board.whiteKingRef 
+        king = board.whiteKingRef
     else:
         king = board.blackKingRef
 
     wasCheck = king.inCheck
 
     differences = [
-        (i, boardState[i], oldBoard[i]) for i in range(len(boardState)) if oldBoard[i] != boardState[i]
+        (i, boardState[i], oldBoard[i])
+        for i in range(len(boardState))
+        if oldBoard[i] != boardState[i]
     ]
 
     notation = generateNotation(
@@ -114,6 +108,7 @@ def makeMove(
         print(notation)
 
     return differences
+
 
 def revertMove(
     board: BoardState,

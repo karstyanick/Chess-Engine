@@ -3,6 +3,7 @@ from Piece import Piece
 
 BoardState = List[Union[Piece, str]]
 
+
 class Board:
     whiteKingRef: Piece
     blackKingRef: Piece
@@ -15,11 +16,11 @@ class Board:
             if square == "none":
                 self.board.append("none")
             else:
-                if (square == "K"):
+                if square == "K":
                     whiteKing = Piece(square, i)
                     self.whiteKingRef = whiteKing
                     self.board.append(whiteKing)
-                elif (square == "k"):
+                elif square == "k":
                     blackKing = Piece(square, i)
                     self.blackKingRef = blackKing
                     self.board.append(blackKing)

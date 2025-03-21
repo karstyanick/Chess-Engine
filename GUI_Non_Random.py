@@ -83,13 +83,11 @@ class Application(tk.Frame):
             )
 
             for square in self.legalmoves:
-                self.button_identities[square].configure(
-                    background="red", activebackground="pink"
-                )
+                self.button_identities[square].configure(background="red", activebackground="pink")
 
             photo = tk.PhotoImage(width=1, height=1)
             pressedButton.configure(image=photo)
-            pressedButton.image = photo # type: ignore
+            pressedButton.image = photo  # type: ignore
 
         else:
             self.pickedpiece = cast(Piece, self.pickedpiece)
@@ -98,7 +96,7 @@ class Application(tk.Frame):
                 legalMoveButton = self.button_identities[square]
                 legalMoveButtonColor = (
                     self.original_button_light_square_color
-                    if "lightsquare" in legalMoveButton._name # type: ignore
+                    if "lightsquare" in legalMoveButton._name  # type: ignore
                     else self.original_button_dark_square_color
                 )
                 legalMoveButton.configure(
@@ -128,10 +126,10 @@ class Application(tk.Frame):
 
                     visualSquare = self.button_identities[index]
                     visualSquare.configure(image=photo)
-                    visualSquare.image = photo # type: ignore
+                    visualSquare.image = photo  # type: ignore
 
                 computer_color = "Black" if self.human_color == "White" else "White"
-                
+
                 if computer_color == "Black":
                     computer_king = self.board.blackKingRef
                 else:
@@ -154,13 +152,10 @@ class Application(tk.Frame):
                 pressedButton = self.button_identities[self.pickedpiece.position]
                 self.boardState[self.pickedpiece.position] = self.pickedpiece
                 photo = tk.PhotoImage(
-                    file="./sprites/"
-                    + self.pickedpiece.color
-                    + self.pickedpiece.name
-                    + ".png"
+                    file="./sprites/" + self.pickedpiece.color + self.pickedpiece.name + ".png"
                 )
                 pressedButton.configure(image=photo)
-                pressedButton.image = photo # type: ignore
+                pressedButton.image = photo  # type: ignore
 
             self.pickedpiece = "none"
 
@@ -171,8 +166,7 @@ class Application(tk.Frame):
         computer_color = "Black" if self.human_color == "White" else "White"
         start_time = time.time()
         chosenPiece, chosenDestination, _ = FindMove(
-            self.board,
-            self.boardState, computer_color, computer_color, self.movesList, 2
+            self.board, self.boardState, computer_color, computer_color, self.movesList, 2, True
         )
         end_time = time.time()
         print(
@@ -180,8 +174,7 @@ class Application(tk.Frame):
         )
 
         boardDifferences = makeMove(
-            self.board,
-            self.boardState, chosenPiece, chosenDestination, self.movesList, True, True
+            self.board, self.boardState, chosenPiece, chosenDestination, self.movesList, True, True
         )
 
         for difference in boardDifferences:
@@ -190,13 +183,11 @@ class Application(tk.Frame):
                 photo = tk.PhotoImage(width=1, height=1)
             else:
                 newState = cast(Piece, newState)
-                photo = tk.PhotoImage(
-                    file="./sprites/" + newState.color + newState.name + ".png"
-                )
+                photo = tk.PhotoImage(file="./sprites/" + newState.color + newState.name + ".png")
 
             visualSquare = self.button_identities[index]
             visualSquare.configure(image=photo)
-            visualSquare.image = photo # type: ignore
+            visualSquare.image = photo  # type: ignore
 
         human_color = "Black" if computer_color == "White" else "White"
 
@@ -204,7 +195,7 @@ class Application(tk.Frame):
             human_king = self.board.blackKingRef
         else:
             human_king = self.board.whiteKingRef
-   
+
         setCheckMate(self.board, self.boardState, human_king)
 
         if human_king.inCheckMate:
@@ -225,9 +216,7 @@ class Application(tk.Frame):
                     photo = tk.PhotoImage(width=1, height=1)
                 else:
                     piece = cast(Piece, piece)
-                    photo = tk.PhotoImage(
-                        file="./sprites/" + piece.color + piece.name + ".png"
-                    )
+                    photo = tk.PhotoImage(file="./sprites/" + piece.color + piece.name + ".png")
 
                 x = tk.Button(
                     self,
@@ -249,7 +238,7 @@ class Application(tk.Frame):
                 )
 
                 x.grid(column=phile, row=rank)
-                x.image = photo # type: ignore
+                x.image = photo  # type: ignore
                 self.button_identities.append(x)
 
 

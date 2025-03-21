@@ -58,9 +58,7 @@ def singleSquareMovesToEdge(index: int) -> List[int]:
     return NumOfSquaresToEdge
 
 
-def collision(
-    board: BoardState, piece: Piece, index: int, offset: int
-) -> List[bool]:
+def collision(board: BoardState, piece: Piece, index: int, offset: int) -> List[bool]:
     collisionlist: List[bool] = [False, False]
 
     boardPiece = board[index + offset]
@@ -273,9 +271,7 @@ def generateLegalKingMoves(
         numberOfSquaresToEdge = getNumSquaresToEdgeBasedOnOffset(pieceIndex, offset)
         if (
             offset == -1
-            and next(
-                (rook for rook in eligableRooks if piece.position > rook.position), None
-            )
+            and next((rook for rook in eligableRooks if piece.position > rook.position), None)
             and piece.firstmove
         ):
             legalMoves += getDefaultMovesForOffset(
@@ -283,9 +279,7 @@ def generateLegalKingMoves(
             )
         elif (
             offset == 1
-            and next(
-                (rook for rook in eligableRooks if piece.position < rook.position), None
-            )
+            and next((rook for rook in eligableRooks if piece.position < rook.position), None)
             and piece.firstmove
         ):
             legalMoves += getDefaultMovesForOffset(
@@ -320,7 +314,7 @@ def GenerateLegalMovesPreCheck(
 ) -> List[int]:
     legalmoves: List[int] = []
     piece = board[pieceIndex]
-    
+
     if piece == "none":
         return legalmoves
     else:
@@ -366,7 +360,7 @@ def GenerateLegalMoves(
 
         if king.inCheck:
             legalmoves.remove(move)
-            
+
         revertMove(boardState, differences, previousMovesList)
 
     if (

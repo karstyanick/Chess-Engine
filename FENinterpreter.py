@@ -50,16 +50,16 @@ def generateNotation(
     else:
         if piece.notationName == "p" or piece.notationName == "P":
             if wasCapture:
-                    notation += translateIndexToSquare(start)[0] + "x" + translateIndexToSquare(end)
+                notation += translateIndexToSquare(start)[0] + "x" + translateIndexToSquare(end)
             else:
                 notation += translateIndexToSquare(end)
         else:
             if wasCapture:
-                notation += piece.notationName.upper() + "x"  + translateIndexToSquare(end)
+                notation += piece.notationName.upper() + "x" + translateIndexToSquare(end)
             else:
                 notation += piece.notationName.upper() + translateIndexToSquare(end)
 
     if wasCheck:
         notation += "+"
-    
+
     return notation

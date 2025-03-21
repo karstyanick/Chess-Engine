@@ -63,13 +63,11 @@ class Application(tk.Frame):
             )
 
             for square in self.legalmoves:
-                self.button_identities[square].configure(
-                    background="red", activebackground="pink"
-                )
+                self.button_identities[square].configure(background="red", activebackground="pink")
 
             photo = tk.PhotoImage(width=1, height=1)
             pressedButton.configure(image=photo)
-            pressedButton.image = photo # type: ignore
+            pressedButton.image = photo  # type: ignore
 
             # print(self.board)
         else:
@@ -78,7 +76,7 @@ class Application(tk.Frame):
                 legalMoveButton = self.button_identities[square]
                 legalMoveButtonColor = (
                     self.original_button_light_square_color
-                    if "lightsquare" in legalMoveButton._name # type: ignore
+                    if "lightsquare" in legalMoveButton._name  # type: ignore
                     else self.original_button_dark_square_color
                 )
                 legalMoveButton.configure(
@@ -88,7 +86,12 @@ class Application(tk.Frame):
 
             if clickedIndex in self.legalmoves:
                 boardDifferences = makeMove(
-                    self.board, self.boardState, cast(Piece, self.pickedpiece), clickedIndex, self.movesList, True
+                    self.board,
+                    self.boardState,
+                    cast(Piece, self.pickedpiece),
+                    clickedIndex,
+                    self.movesList,
+                    True,
                 )
                 for difference in boardDifferences:
                     index, newState, _ = difference
@@ -102,10 +105,12 @@ class Application(tk.Frame):
 
                     visualSquare = self.button_identities[index]
                     visualSquare.configure(image=photo)
-                    visualSquare.image = photo # type: ignore
+                    visualSquare.image = photo  # type: ignore
 
                 self.nextTurn = "Black" if self.nextTurn == "White" else "White"
-                king = self.board.whiteKingRef if self.nextTurn == "White" else self.board.blackKingRef
+                king = (
+                    self.board.whiteKingRef if self.nextTurn == "White" else self.board.blackKingRef
+                )
 
                 if setCheckMate(self.board, self.boardState, king):
                     print("Checkmate")
@@ -114,13 +119,10 @@ class Application(tk.Frame):
                 pressedButton = self.button_identities[pickedPiece.position]
                 self.boardState[pickedPiece.position] = self.pickedpiece
                 photo = tk.PhotoImage(
-                    file="./sprites/"
-                    + pickedPiece.color
-                    + pickedPiece.name
-                    + ".png"
+                    file="./sprites/" + pickedPiece.color + pickedPiece.name + ".png"
                 )
                 pressedButton.configure(image=photo)
-                pressedButton.image = photo # type: ignore
+                pressedButton.image = photo  # type: ignore
 
             self.pickedpiece = "none"
 
@@ -128,10 +130,15 @@ class Application(tk.Frame):
         for rank in range(8):
             for phile in range(8):
                 piece = self.boardState[rank * 8 + phile]
-                
+
                 # Load the image for the piece, or a transparent placeholder
                 photo = (
-                    tk.PhotoImage(file="./sprites/" + cast(Piece, piece).color + cast(Piece, piece).name + ".png")
+                    tk.PhotoImage(
+                        file="./sprites/"
+                        + cast(Piece, piece).color
+                        + cast(Piece, piece).name
+                        + ".png"
+                    )
                     if piece != "none"
                     else tk.PhotoImage(width=1, height=1)
                 )
