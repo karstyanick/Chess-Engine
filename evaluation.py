@@ -1,12 +1,16 @@
 from math import sqrt
 from Board import BoardState
-from makeMove import makeMove
+from makeMove import makeMove, revertMove
 from GenerateLegalMoves import GenerateAllLegalMoves
 from Piece import Piece
 from typing import List, Tuple, cast
-import copy
 import random
 
+counter = 0
+
+def counterIncr () -> None:
+    global counter
+    counter += 1 # type: ignore
 
 def FindMove(
     board: BoardState,
@@ -14,6 +18,8 @@ def FindMove(
     evaluationColor: str,
     movesList: List[Tuple[Piece, int, int, str]],
     depth: int,
+    isBase: bool = False,
+    previousMaxEval: int = -100000
 ):
     moves = GenerateAllLegalMoves(board, movesColor, movesList)
     evaluations: List[Tuple[Piece, int, int]] = []
@@ -21,35 +27,51 @@ def FindMove(
     for move in moves:
         piece = move[0]
         for destination in move[1]:
-            boardCopy = copy.deepcopy(board)
-            pieceCopy = cast(Piece, boardCopy[piece.position])
 
-            makeMove(boardCopy, pieceCopy, destination, [], False)
+            differences = makeMove(board, piece, destination, [], False)
+            
             if depth != 0:
                 bestOpponentResponse = FindMove(
-                    boardCopy,
+                    board,
                     "White" if movesColor == "Black" else "Black",
                     "White" if movesColor == "Black" else "Black",
                     movesList,
                     depth - 1,
                 )
-                makeMove(
-                    boardCopy,
+                innerDiff = makeMove(
+                    board,
                     bestOpponentResponse[0],
                     bestOpponentResponse[1],
                     [],
                     False,
                 )
-                evaluations.append(
-                    (piece, destination, EvaluatePosition(boardCopy, evaluationColor))
-                )
+                counterIncr()
+                if(bestOpponentResponse[2] > previousMaxEval):
+                    previousMaxEval = bestOpponentResponse[2]
+
+                evaluation = EvaluatePosition(board, evaluationColor)
+                
+                if evaluation < previousMaxEval:
+                    revertMove(board, innerDiff, [])
+                    revertMove(board, differences, [])
+                    break
+                else:
+                    evaluations.append((piece, destination, evaluation))
+                    revertMove(board, innerDiff, [])
             else:
                 evaluations.append(
-                    (piece, destination, EvaluatePosition(boardCopy, evaluationColor))
+                    (piece, destination, EvaluatePosition(board, evaluationColor))
                 )
+                counterIncr()
+            
+            revertMove(board, differences, [])
 
     evaluations.sort(key=lambda x: x[2], reverse=True)
     max_evaluations = [e for e in evaluations if e[2] == evaluations[0][2]]
+    if(isBase):
+        global counter
+        print(counter)
+        counter = 0
     return random.choice(max_evaluations)
 
 

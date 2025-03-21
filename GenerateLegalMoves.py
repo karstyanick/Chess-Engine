@@ -353,7 +353,53 @@ def GenerateLegalMoves(
     previousMovesList: List[Tuple[Piece, int, int, str]],
 ) -> List[int]:
     legalmoves = GenerateLegalMovesPreCheck(pieceIndex, board, previousMovesList)
+
     piece = cast(Piece, board[pieceIndex])
+
+    # opponentColor = "White" if cast(Piece, board[pieceIndex]).color == "Black" else "Black"
+
+    # opponentPieces = [
+    #     cast(Piece, boardPiece)
+    #     for boardPiece in board
+    #     if boardPiece != "none" and cast(Piece, boardPiece).color == opponentColor
+    # ]
+
+    # for opponentPiece in opponentPieces:
+    #     opponentPiece.currentlyAttackedSquares = GenerateLegalMovesPreCheck(opponentPiece.position, board, previousMovesList)
+
+
+    # if(piece.name == "King"):
+    #     for move in legalmoves:
+    #         for piece in opponentPieces:
+    #             alreadyRemoved = False
+                
+    #             if alreadyRemoved:
+    #                 break
+                
+    #             if move in piece.currentlyAttackedSquares:
+    #                 legalmoves.remove(move)
+    #                 alreadyRemoved = True
+    #                 break
+                
+    # king = next(
+    #     (
+    #         boardPiece
+    #         for boardPiece in board
+    #         if boardPiece != "none"
+    #         and cast(Piece, boardPiece).name == "King"
+    #         and cast(Piece, boardPiece).color == piece.color
+    #     ),
+    #     None,
+    # )
+
+    # currentlyInCheck = False
+
+    # for opponentPiece in opponentPieces:
+    #     if king.position in opponentPiece.currentlyAttackedSquares:
+    #         currentlyInCheck = True
+    #         break
+
+    # if currentlyInCheck:
 
     for move in legalmoves[:]:
         differences = makeMove(board, piece, move, previousMovesList, False)

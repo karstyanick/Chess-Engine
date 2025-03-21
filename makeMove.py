@@ -130,8 +130,8 @@ def revertMove(
         board[index] = oldPiece
         if oldPiece != "none":
             cast(Piece, oldPiece).position = index
-
-    movesList.pop()
+    if(len(movesList) > 0):
+        movesList.pop()
     return None
 
 

@@ -175,7 +175,7 @@ class Application(tk.Frame):
         computer_color = "Black" if self.human_color == "White" else "White"
         start_time = time.time()
         chosenPiece, chosenDestination, _ = FindMove(
-            self.board, computer_color, computer_color, self.movesList, 1
+            self.board, computer_color, computer_color, self.movesList, 2, True
         )
         end_time = time.time()
         print(
