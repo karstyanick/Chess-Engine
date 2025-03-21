@@ -1,5 +1,5 @@
 from typing import List, Tuple, cast
-from Board import BoardState
+from Board import Board, BoardState
 from Piece import Piece
 from makeMove import makeMove, revertMove
 
@@ -349,27 +349,25 @@ def GenerateLegalMovesPreCheck(
 
 def GenerateLegalMoves(
     pieceIndex: int,
-    board: BoardState,
+    board: Board,
+    boardState: BoardState,
     previousMovesList: List[Tuple[Piece, int, int, str]],
 ) -> List[int]:
-    legalmoves = GenerateLegalMovesPreCheck(pieceIndex, board, previousMovesList)
-    piece = cast(Piece, board[pieceIndex])
+    legalmoves = GenerateLegalMovesPreCheck(pieceIndex, boardState, previousMovesList)
+    piece = cast(Piece, boardState[pieceIndex])
 
     for move in legalmoves[:]:
-        differences = makeMove(board, piece, move, previousMovesList, False)
-        if next(
-            (
-                boardPiece
-                for boardPiece in board
-                if boardPiece != "none"
-                and cast(Piece, boardPiece).name == "King"
-                and cast(Piece, boardPiece).color == piece.color
-                and cast(Piece, boardPiece).inCheck
-            ),
-            None,
-        ):
+        differences = makeMove(board, boardState, piece, move, previousMovesList, False)
+
+        if piece.color == "White":
+            king = board.whiteKingRef
+        else:
+            king = board.blackKingRef
+
+        if king.inCheck:
             legalmoves.remove(move)
-        revertMove(board, differences, previousMovesList)
+            
+        revertMove(boardState, differences, previousMovesList)
 
     if (
         piece.name == "King"
@@ -389,13 +387,14 @@ def GenerateLegalMoves(
 
 
 def GenerateAllLegalMoves(
-    board: BoardState,
+    board: Board,
+    boardState: BoardState,
     color: str,
     previousMovesList: List[Tuple[Piece, int, int, str]],
 ) -> List[Tuple[Piece, List[int]]]:
     legalmoves: List[Tuple[Piece, List[int]]] = []
 
-    for index, piece in enumerate(board):
+    for index, piece in enumerate(boardState):
 
         if piece == "none":
             continue
@@ -403,7 +402,7 @@ def GenerateAllLegalMoves(
         piece = cast(Piece, piece)
 
         if piece.color == color:
-            foundMoves = GenerateLegalMoves(index, board, previousMovesList)
+            foundMoves = GenerateLegalMoves(index, board, boardState, previousMovesList)
             if len(foundMoves) > 0:
                 legalmoves.append((piece, foundMoves))
 

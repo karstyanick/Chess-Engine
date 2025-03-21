@@ -14,8 +14,8 @@ from makeMove import makeMove, setCheckMate
 
 class Application(tk.Frame):
 
-    boardinit = Board(feninterpreter("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"))
-    board = boardinit.board
+    board = Board(feninterpreter("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"))
+    boardState = board.board
     legalmoves = []
 
     # Initially, let White move first.
@@ -71,16 +71,16 @@ class Application(tk.Frame):
             self.pickedpiece = cast(str, self.pickedpiece)
 
             if (
-                self.board[clickedIndex] == "none"
-                or cast(Piece, self.board[clickedIndex]).color != self.human_color
+                self.boardState[clickedIndex] == "none"
+                or cast(Piece, self.boardState[clickedIndex]).color != self.human_color
             ):
                 return
 
-            self.pickedpiece = self.board[clickedIndex]
+            self.pickedpiece = self.boardState[clickedIndex]
 
             start_time = time.time()
             self.legalmoves = GenerateLegalMoves(
-                clickedIndex, self.board, self.movesList
+                clickedIndex, self.board, self.boardState, self.movesList
             )
             end_time = time.time()
             print(
@@ -113,7 +113,7 @@ class Application(tk.Frame):
 
             if clickedIndex in self.legalmoves:
                 boardDifferences = makeMove(
-                    self.board, self.pickedpiece, clickedIndex, self.movesList, True
+                    self.board, self.boardState, self.pickedpiece, clickedIndex, self.movesList, True
                 )
                 for difference in boardDifferences:
                     index, newState, _ = difference
@@ -134,7 +134,7 @@ class Application(tk.Frame):
                 computer_king = cast(Piece, next(
                     (
                         cast(Piece, piece)
-                        for piece in self.board
+                        for piece in self.boardState
                         if piece != "none"
                         and cast(Piece, piece).name == "King"
                         and cast(Piece, piece).color == computer_color
@@ -142,7 +142,7 @@ class Application(tk.Frame):
                     None,
                 ))
                 
-                setCheckMate(self.board, computer_king)
+                setCheckMate(self.board, self.boardState, computer_king)
 
                 if computer_king.inCheckMate:
                     self.displayGameOver("Game Over: Checkmate! You Win.")
@@ -154,7 +154,7 @@ class Application(tk.Frame):
                     self.after(500, self.computerMove)
             else:
                 pressedButton = self.button_identities[self.pickedpiece.position]
-                self.board[self.pickedpiece.position] = self.pickedpiece
+                self.boardState[self.pickedpiece.position] = self.pickedpiece
                 photo = tk.PhotoImage(
                     file="./sprites/"
                     + self.pickedpiece.color
@@ -174,21 +174,21 @@ class Application(tk.Frame):
 
         computerPieces = [
             cast(Piece, piece)
-            for piece in self.board
+            for piece in self.boardState
             if piece != "none" and cast(Piece, piece).color == computer_color
         ]
 
         randomPiece = None
-        moves = []
+        moves: List[int] = []
 
         while len(moves) == 0:
             randomPiece = random.choice(computerPieces)
-            moves = GenerateLegalMoves(randomPiece.position, self.board, self.movesList)
+            moves = GenerateLegalMoves(randomPiece.position, self.board, self.boardState, self.movesList)
 
         destination = random.choice(moves)
 
         boardDifferences = makeMove(
-            self.board, cast(Piece, randomPiece), destination, self.movesList, True
+            self.board, self.boardState, cast(Piece, randomPiece), destination, self.movesList, True
         )
 
         for difference in boardDifferences:
@@ -209,7 +209,7 @@ class Application(tk.Frame):
         human_king = cast(Piece, next(
             (
                 cast(Piece, piece)
-                for piece in self.board
+                for piece in self.boardState
                 if piece != "none"
                 and cast(Piece, piece).name == "King"
                 and cast(Piece, piece).color == human_color
@@ -217,7 +217,7 @@ class Application(tk.Frame):
             None,
         ))
 
-        setCheckMate(self.board, human_king)
+        setCheckMate(self.board, self.boardState, human_king)
 
         if human_king.inCheckMate:
             self.displayGameOver("Game Over: Checkmate! You Loose.")
@@ -229,7 +229,7 @@ class Application(tk.Frame):
     def createWidgets(self):
         for rank in range(8):
             for phile in range(8):
-                piece = self.board[rank * 8 + phile]
+                piece = self.boardState[rank * 8 + phile]
 
                 if piece == "none":
                     photo = tk.PhotoImage(width=1, height=1)

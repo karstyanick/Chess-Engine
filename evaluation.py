@@ -1,52 +1,59 @@
 from math import sqrt
-from Board import BoardState
-from makeMove import makeMove
+from Board import Board, BoardState
+from makeMove import makeMove, revertMove
 from GenerateLegalMoves import GenerateAllLegalMoves
 from Piece import Piece
 from typing import List, Tuple, cast
-import copy
 import random
 
 
 def FindMove(
-    board: BoardState,
+    board: Board,
+    boardState: BoardState,
     movesColor: str,
     evaluationColor: str,
     movesList: List[Tuple[Piece, int, int, str]],
     depth: int,
 ):
-    moves = GenerateAllLegalMoves(board, movesColor, movesList)
+    moves = GenerateAllLegalMoves(board, boardState, movesColor, movesList)
     evaluations: List[Tuple[Piece, int, int]] = []
 
     for move in moves:
         piece = move[0]
         for destination in move[1]:
-            boardCopy = copy.deepcopy(board)
-            pieceCopy = cast(Piece, boardCopy[piece.position])
 
-            makeMove(boardCopy, pieceCopy, destination, [], False)
+            outer_differences = makeMove(board, boardState, piece, destination, [], False)
+
             if depth != 0:
                 bestOpponentResponse = FindMove(
-                    boardCopy,
+                    board,
+                    boardState,
                     "White" if movesColor == "Black" else "Black",
                     "White" if movesColor == "Black" else "Black",
                     movesList,
                     depth - 1,
                 )
-                makeMove(
-                    boardCopy,
+                inner_differences = makeMove(
+                    board,
+                    boardState,
                     bestOpponentResponse[0],
                     bestOpponentResponse[1],
                     [],
                     False,
                 )
+
                 evaluations.append(
-                    (piece, destination, EvaluatePosition(boardCopy, evaluationColor))
+                    (piece, destination, EvaluatePosition(boardState, evaluationColor))
                 )
+
+                revertMove(boardState, inner_differences, [])
             else:
                 evaluations.append(
-                    (piece, destination, EvaluatePosition(boardCopy, evaluationColor))
+                    (piece, destination, EvaluatePosition(boardState, evaluationColor))
                 )
+            
+            revertMove(boardState, outer_differences, [])
+
 
     evaluations.sort(key=lambda x: x[2], reverse=True)
     max_evaluations = [e for e in evaluations if e[2] == evaluations[0][2]]

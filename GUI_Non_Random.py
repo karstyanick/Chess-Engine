@@ -14,8 +14,8 @@ from makeMove import makeMove, setCheckMate
 
 class Application(tk.Frame):
 
-    boardinit = Board(feninterpreter("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"))
-    board = boardinit.board
+    board = Board(feninterpreter("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"))
+    boardState = board.board
     legalmoves = []
 
     # Initially, let White move first.
@@ -71,15 +71,15 @@ class Application(tk.Frame):
             self.pickedpiece = cast(str, self.pickedpiece)
 
             if (
-                self.board[clickedIndex] == "none"
-                or cast(Piece, self.board[clickedIndex]).color != self.human_color
+                self.boardState[clickedIndex] == "none"
+                or cast(Piece, self.boardState[clickedIndex]).color != self.human_color
             ):
                 return
 
-            self.pickedpiece = self.board[clickedIndex]
+            self.pickedpiece = self.boardState[clickedIndex]
 
             self.legalmoves = GenerateLegalMoves(
-                clickedIndex, self.board, self.movesList
+                clickedIndex, self.board, self.boardState, self.movesList
             )
 
             for square in self.legalmoves:
@@ -109,6 +109,7 @@ class Application(tk.Frame):
             if clickedIndex in self.legalmoves:
                 boardDifferences = makeMove(
                     self.board,
+                    self.boardState,
                     self.pickedpiece,
                     clickedIndex,
                     self.movesList,
@@ -130,18 +131,13 @@ class Application(tk.Frame):
                     visualSquare.image = photo # type: ignore
 
                 computer_color = "Black" if self.human_color == "White" else "White"
-                computer_king = cast(Piece, next(
-                    (
-                        piece
-                        for piece in self.board
-                        if piece != "none"
-                        and cast(Piece, piece).name == "King"
-                        and cast(Piece, piece).color == computer_color
-                    ),
-                    None,
-                ))
+                
+                if computer_color == "Black":
+                    computer_king = self.board.blackKingRef
+                else:
+                    computer_king = self.board.whiteKingRef
 
-                setCheckMate(self.board, computer_king)
+                setCheckMate(self.board, self.boardState, computer_king)
 
                 if computer_king.inCheckMate:
                     self.displayGameOver("Game Over: Checkmate! You Win.")
@@ -156,7 +152,7 @@ class Application(tk.Frame):
                     self.after(500, self.computerMove)
             else:
                 pressedButton = self.button_identities[self.pickedpiece.position]
-                self.board[self.pickedpiece.position] = self.pickedpiece
+                self.boardState[self.pickedpiece.position] = self.pickedpiece
                 photo = tk.PhotoImage(
                     file="./sprites/"
                     + self.pickedpiece.color
@@ -175,7 +171,8 @@ class Application(tk.Frame):
         computer_color = "Black" if self.human_color == "White" else "White"
         start_time = time.time()
         chosenPiece, chosenDestination, _ = FindMove(
-            self.board, computer_color, computer_color, self.movesList, 1
+            self.board,
+            self.boardState, computer_color, computer_color, self.movesList, 2
         )
         end_time = time.time()
         print(
@@ -183,7 +180,8 @@ class Application(tk.Frame):
         )
 
         boardDifferences = makeMove(
-            self.board, chosenPiece, chosenDestination, self.movesList, True, True
+            self.board,
+            self.boardState, chosenPiece, chosenDestination, self.movesList, True, True
         )
 
         for difference in boardDifferences:
@@ -201,17 +199,13 @@ class Application(tk.Frame):
             visualSquare.image = photo # type: ignore
 
         human_color = "Black" if computer_color == "White" else "White"
-        human_king = cast(Piece, next(
-            (
-                piece
-                for piece in self.board
-                if piece != "none"
-                and cast(Piece, piece).name == "King"
-                and cast(Piece, piece).color == human_color
-            ),
-            None,
-        ))
-        setCheckMate(self.board, human_king)
+
+        if human_color == "Black":
+            human_king = self.board.blackKingRef
+        else:
+            human_king = self.board.whiteKingRef
+   
+        setCheckMate(self.board, self.boardState, human_king)
 
         if human_king.inCheckMate:
             self.displayGameOver("Game Over: Checkmate! You Loose.")
@@ -225,7 +219,7 @@ class Application(tk.Frame):
     def createWidgets(self):
         for rank in range(8):
             for phile in range(8):
-                piece = self.board[rank * 8 + phile]
+                piece = self.boardState[rank * 8 + phile]
 
                 if piece == "none":
                     photo = tk.PhotoImage(width=1, height=1)
