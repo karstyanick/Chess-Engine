@@ -14,18 +14,21 @@ def counterIncr() -> None:
     counter += 1  # type: ignore
 
 
-def FindMove(
+def FindMove(  # type: ignore
     board: Board,
     boardState: BoardState,
-    movesColor: str,
-    evaluationColor: str,
+    color: str,
     movesList: List[Tuple[Piece, int, int, str]],
     depth: int,
     isBase: bool = False,
-    previousMaxEval: int = -100000,
+    alpha: int = -100000,
+    beta: int = 100000,
 ):
-    moves = GenerateAllLegalMoves(board, boardState, movesColor, movesList)
+    moves = GenerateAllLegalMoves(board, boardState, color, movesList)
+
     evaluations: List[Tuple[Piece, int, int]] = []
+
+    stopLoop = False
 
     for move in moves:
         piece = move[0]
@@ -34,45 +37,48 @@ def FindMove(
             outer_differences = makeMove(board, boardState, piece, destination, [], False)
 
             if depth != 0:
-                bestOpponentResponse = FindMove(
+                bestOpponentMoveScore = -FindMove(
                     board,
                     boardState,
-                    "White" if movesColor == "Black" else "Black",
-                    "White" if movesColor == "Black" else "Black",
+                    "White" if color == "Black" else "Black",
                     movesList,
                     depth - 1,
-                )
-                inner_differences = makeMove(
-                    board,
-                    boardState,
-                    bestOpponentResponse[0],
-                    bestOpponentResponse[1],
-                    [],
                     False,
-                )
+                    -beta,
+                    -alpha,
+                )[2]
 
+                if bestOpponentMoveScore > alpha:
+                    evaluations.sort(key=lambda x: x[2], reverse=True)
+                    alpha = bestOpponentMoveScore
+                    evaluations.append((piece, destination, bestOpponentMoveScore))
+
+                if bestOpponentMoveScore >= beta:
+                    evaluations.append((piece, destination, bestOpponentMoveScore))
+                    revertMove(boardState, outer_differences, [])
+                    stopLoop = True
+                    break
                 counterIncr()
-
-                evaluations.append(
-                    (piece, destination, EvaluatePosition(boardState, evaluationColor))
-                )
-
-                revertMove(boardState, inner_differences, [])
             else:
-                evaluations.append(
-                    (piece, destination, EvaluatePosition(boardState, evaluationColor))
-                )
+                evaluations.append((piece, destination, EvaluatePosition(boardState, color)))
                 counterIncr()
 
             revertMove(boardState, outer_differences, [])
+        if stopLoop:
+            break
+    
+    if len(evaluations) == 0:
+        evaluations.append((None, None, -100000)) # type: ignore
 
     evaluations.sort(key=lambda x: x[2], reverse=True)
     max_evaluations = [e for e in evaluations if e[2] == evaluations[0][2]]
+    chosen_move = random.choice(max_evaluations)
     if isBase:
+        print("Chosen move eval: ", chosen_move[2])
         global counter
         print(counter)
         counter = 0
-    return random.choice(max_evaluations)
+    return chosen_move
 
 
 def EvaluatePosition(board: BoardState, color: str) -> int:

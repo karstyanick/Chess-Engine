@@ -165,9 +165,10 @@ class Application(tk.Frame):
 
         computer_color = "Black" if self.human_color == "White" else "White"
         start_time = time.time()
-        chosenPiece, chosenDestination, _ = FindMove(
-            self.board, self.boardState, computer_color, computer_color, self.movesList, 2, True
+        chosenPiece, chosenDestination, _ = FindMove(  # type: ignore
+            self.board, self.boardState, computer_color, self.movesList, 2, True
         )
+
         end_time = time.time()
         print(
             f"Time taken to generate legal moves for computer: {(end_time - start_time) * 1000:.2f} milliseconds"
