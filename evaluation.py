@@ -60,7 +60,7 @@ def FindMove(  # type: ignore
                     break
                 counterIncr()
             else:
-                evaluations.append((piece, destination, EvaluatePosition(boardState, color)))
+                evaluations.append((piece, destination, EvaluatePosition(board, boardState, color)))
                 counterIncr()
 
             revertMove(boardState, outer_differences, [])
@@ -81,31 +81,61 @@ def FindMove(  # type: ignore
     return chosen_move
 
 
-def EvaluatePosition(board: BoardState, color: str) -> int:
+def EvaluatePosition(board: Board, boardState: BoardState, color: str) -> int:
     white_value = 0
     black_value = 0
 
-    for piece in board:
+    for piece in boardState:
 
         if piece == "none":
             continue
 
         piece = cast(Piece, piece)
-
-        # Skip empty squares and kings if required
-        if piece.name != "King":
-            # Multiply the piece value by 100 to match the scaling
-            if piece.color == "White":
-                white_value += piece.value * 100 + AddCenterValuation(piece)
-            else:
-                black_value += piece.value * 100 + AddCenterValuation(piece)
+       
+        if piece.color == "White":
+            white_value += piece.value * 100 + AddPieceSquareValuation(board, piece)
+        else:
+            black_value += piece.value * 100 + AddPieceSquareValuation(board, piece)
 
     # Return the scaled result
     if color == "White":
         return white_value - black_value
     else:
         return black_value - white_value
-
+    
+def AddPieceSquareValuation(board: Board, piece: Piece) -> int:
+    if piece.name == "Pawn":
+        if piece.color == "White":
+            return board.whitePawnSquareTable[piece.position]
+        else:
+            return board.blackPawnSquareTable[piece.position]
+    elif piece.name == "Knight":
+        if piece.color == "White":
+            return board.whiteKnightSquareTable[piece.position]
+        else:
+            return board.blackKnighTsquareTable[piece.position]
+    elif piece.name == "Bishop":
+        if piece.color == "White":
+            return board.whiteBishopSquareTable[piece.position]
+        else:
+            return board.blackBishopSquareTable[piece.position]
+    elif piece.name == "Rook":
+        if piece.color == "White":
+            return board.whiteRookSquareTable[piece.position]
+        else:
+            return board.blackRookSquareTable[piece.position]
+    elif piece.name == "Queen":
+        if piece.color == "White":
+            return board.whiteQueenSquareTable[piece.position]
+        else:
+            return board.blackQueenSquareTable[piece.position]
+    elif piece.name == "King":
+        if piece.color == "White":
+            return board.whiteKingSquareTable[piece.position]
+        else:
+            return board.blackKingSquareTable[piece.position]
+    else:
+        return 0
 
 def AddCenterValuation(piece: Piece) -> int:
     pos = piece.position

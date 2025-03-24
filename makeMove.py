@@ -74,6 +74,8 @@ def makeMove(
     boardState[piece.position] = "none"
     boardState[movedTo] = piece
 
+    previousLocation = piece.position
+
     piece.position = movedTo
 
     setCheck(board, boardState, logCheck)
@@ -93,7 +95,7 @@ def makeMove(
 
     notation = generateNotation(
         piece,
-        piece.position,
+        previousLocation,
         movedTo,
         wasCapture,
         wasKingsideCastle,
