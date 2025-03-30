@@ -11,10 +11,10 @@ counter = 0
 
 def counterIncr() -> None:
     global counter
-    counter += 1  # type: ignore
+    counter += 1
 
 
-def FindMove(  # type: ignore
+def FindMove(
     board: Board,
     boardState: BoardState,
     color: str,
@@ -28,13 +28,19 @@ def FindMove(  # type: ignore
 
     evaluations: List[Tuple[Piece, int, int]] = []
 
+    if len(moves) == 0:
+        # The search might run into checkmate or stalemate
+        # We can return none on the piece and dest because we can only run into checkmate if not in base of recursion
+        # The base of recursion will always have at least one move as we are checking for checkmate after player moves
+        evaluations.append((None, None, -100000)) # type: ignore
+
     stopLoop = False
 
     for move in moves:
         piece = move[0]
         for destination in move[1]:
 
-            outer_differences = makeMove(board, boardState, piece, destination, [], False)
+            differences = makeMove(board, boardState, piece, destination, [], False)
 
             if depth != 0:
                 bestOpponentMoveScore = -FindMove(
@@ -48,27 +54,28 @@ def FindMove(  # type: ignore
                     -alpha,
                 )[2]
 
+                counterIncr()
+
                 if bestOpponentMoveScore > alpha:
-                    evaluations.sort(key=lambda x: x[2], reverse=True)
                     alpha = bestOpponentMoveScore
                     evaluations.append((piece, destination, bestOpponentMoveScore))
+                    revertMove(boardState, differences, [])
+                    continue
 
                 if bestOpponentMoveScore >= beta:
                     evaluations.append((piece, destination, bestOpponentMoveScore))
-                    revertMove(boardState, outer_differences, [])
+                    revertMove(boardState, differences, [])
                     stopLoop = True
                     break
-                counterIncr()
+
+                evaluations.append((piece, destination, -100000)) # This should not update the score but we need to append a value to avoid empty evaluations
             else:
                 evaluations.append((piece, destination, EvaluatePosition(board, boardState, color)))
                 counterIncr()
 
-            revertMove(boardState, outer_differences, [])
+            revertMove(boardState, differences, [])
         if stopLoop:
             break
-    
-    if len(evaluations) == 0:
-        evaluations.append((None, None, -100000)) # type: ignore
 
     evaluations.sort(key=lambda x: x[2], reverse=True)
     max_evaluations = [e for e in evaluations if e[2] == evaluations[0][2]]

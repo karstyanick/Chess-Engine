@@ -11,7 +11,6 @@ def makeMove(
     movedTo: int,
     movesList: List[Tuple[Piece, int, int, str]],
     logCheck: bool,
-    affectFirstMove: bool = False,
 ):
 
     oldBoard: BoardState = boardState[:]
@@ -20,6 +19,9 @@ def makeMove(
     wasQueensideCastle = False
 
     wasEnPassant = False
+
+    wasPromotion = False
+    wasFirstMove = False
 
     if piece.name == "King" and piece.firstmove and abs(piece.position - (movedTo)) == 2:
         eligableRooks = [
@@ -49,6 +51,7 @@ def makeMove(
 
     if piece.name == "Pawn" and not piece.firstmove:
         if movedTo < 8 or movedTo > 55:
+            wasPromotion = True
             piece.name = "Queen"
         elif (
             piece.color == "White"
@@ -66,7 +69,8 @@ def makeMove(
             boardState[movedTo - 8] = "none"
             wasEnPassant = True
 
-    if affectFirstMove:
+    if piece.firstmove:
+        wasFirstMove = True
         piece.firstmove = False
 
     wasCapture = boardState[movedTo] != "none"
@@ -88,7 +92,7 @@ def makeMove(
     wasCheck = king.inCheck
 
     differences = [
-        (i, boardState[i], oldBoard[i])
+        (i, boardState[i], oldBoard[i], oldBoard[i] != 'none' and oldBoard[i] == piece and wasPromotion, oldBoard[i] != 'none' and piece and wasFirstMove)
         for i in range(len(boardState))
         if oldBoard[i] != boardState[i]
     ]
@@ -114,14 +118,19 @@ def makeMove(
 
 def revertMove(
     board: BoardState,
-    differences: List[Tuple[int, Union[Piece, str], Union[Piece, str]]],
+    differences: List[Tuple[int, Union[Piece, str], Union[Piece, str], bool, bool]],
     movesList: List[Tuple[Piece, int, int, str]],
 ) -> None:
     for difference in differences:
-        index, _, oldPiece = difference
+        index, _, oldPiece, wasPromotion, wasFirstMove = difference
         board[index] = oldPiece
         if oldPiece != "none":
-            cast(Piece, oldPiece).position = index
+            oldPiece = cast(Piece, oldPiece)
+            oldPiece.position = index
+            if wasPromotion:
+                oldPiece.name = "Pawn"
+            if wasFirstMove:
+                oldPiece.firstmove = True
 
     if len(movesList) > 0:
         movesList.pop()
